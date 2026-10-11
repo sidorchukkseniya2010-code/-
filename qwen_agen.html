@@ -1,0 +1,1798 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PyCodeCamp — Бесплатный курс Python</title>
+  <script>
+    (function () {
+      var reported = {};
+      window.addEventListener("error", function (event) {
+        if (!event || !event.message) return;
+        var key = event.message + "|" + (event.filename || "") + "|" + (event.lineno || 0);
+        if (reported[key]) return;
+        reported[key] = true;
+        try {
+          window.parent.postMessage({
+            type: "sandbox-runtime-error",
+            payload: {
+              message: String(event.message).slice(0, 500),
+              filename: event.filename || "",
+              lineno: event.lineno || 0,
+              colno: event.colno || 0,
+              stack: event.error && event.error.stack ? String(event.error.stack).slice(0, 2000) : ""
+            }
+          }, "*");
+        } catch (e) {}
+      });
+    })();
+  </script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: #0a0a1a;
+      color: #e2e8f0;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: #1a1a2e; }
+    ::-webkit-scrollbar-thumb { background: #4a5568; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #718096; }
+    ::selection { background: rgba(72,187,120,0.3); }
+
+    .header {
+      background: linear-gradient(135deg, #166534, #15803d, #059669);
+      color: white;
+      padding: 12px 20px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .header-left { display: flex; align-items: center; gap: 12px; }
+    .header-logo { font-size: 24px; }
+    .header-title { font-size: 20px; font-weight: 700; letter-spacing: -0.5px; }
+    .header-badge {
+      background: rgba(0,0,0,0.2);
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 13px;
+    }
+    .hamburger {
+      display: none;
+      background: none;
+      border: none;
+      color: white;
+      font-size: 24px;
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: 6px;
+    }
+    .hamburger:hover { background: rgba(255,255,255,0.1); }
+
+    .progress-container { flex: 1; max-width: 300px; margin: 0 20px; }
+    .progress-labels { display: flex; justify-content: space-between; font-size: 12px; color: rgba(255,255,255,0.7); margin-bottom: 4px; }
+    .progress-bar { width: 100%; height: 10px; background: rgba(0,0,0,0.3); border-radius: 5px; overflow: hidden; }
+    .progress-fill { height: 100%; background: linear-gradient(90deg, #22c55e, #34d399); border-radius: 5px; transition: width 0.5s ease; }
+
+    .layout { display: flex; max-width: 1400px; margin: 0 auto; }
+
+    .sidebar {
+      width: 280px;
+      min-width: 280px;
+      background: #111827;
+      border-right: 1px solid #1f2937;
+      height: calc(100vh - 56px);
+      position: sticky;
+      top: 56px;
+      overflow-y: auto;
+      padding: 16px;
+    }
+    .sidebar-section { margin-bottom: 8px; }
+    .sidebar-section-btn {
+      width: 100%;
+      text-align: left;
+      padding: 8px 12px;
+      border-radius: 8px;
+      border: none;
+      background: none;
+      color: #d1d5db;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+    .sidebar-section-btn:hover { background: #1f2937; }
+    .sidebar-section-btn.active { background: rgba(22,101,52,0.4); color: #86efac; border: 1px solid #166534; }
+    .sidebar-section-icon { font-size: 18px; }
+    .sidebar-section-count { margin-left: auto; font-size: 11px; color: #6b7280; }
+    .sidebar-lessons { margin-left: 16px; margin-top: 4px; border-left: 2px solid #374151; padding-left: 12px; }
+    .sidebar-lesson-btn {
+      width: 100%;
+      text-align: left;
+      padding: 6px 10px;
+      border-radius: 6px;
+      border: none;
+      background: none;
+      color: #9ca3af;
+      font-size: 13px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+      margin-bottom: 2px;
+    }
+    .sidebar-lesson-btn:hover { background: #1f2937; color: #e5e7eb; }
+    .sidebar-lesson-btn.active { color: #86efac; background: rgba(22,101,52,0.2); }
+    .lesson-indicator {
+      width: 20px; height: 20px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px;
+      border: 2px solid #4b5563;
+      flex-shrink: 0;
+    }
+    .lesson-indicator.completed { background: #16a34a; border-color: #16a34a; color: white; }
+    .lesson-indicator.current { border-color: #22c55e; }
+
+    .main { flex: 1; min-width: 0; padding: 32px; }
+    .breadcrumb { font-size: 13px; color: #6b7280; margin-bottom: 16px; display: flex; gap: 8px; align-items: center; }
+    .breadcrumb-current { color: #d1d5db; }
+    .lesson-title { font-size: 28px; font-weight: 700; color: white; margin-bottom: 8px; }
+    .lesson-complete-badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      background: #16a34a; color: white; padding: 4px 12px;
+      border-radius: 20px; font-size: 13px; margin-bottom: 24px;
+    }
+
+    .theory-block {
+      background: #111827;
+      border: 1px solid #1f2937;
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 32px;
+    }
+    .theory-title { font-size: 16px; font-weight: 600; color: #4ade80; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+    .theory-content { color: #d1d5db; line-height: 1.7; font-size: 15px; }
+    .theory-content p { margin-bottom: 8px; }
+    .theory-content strong { color: white; }
+    .theory-content code {
+      background: #1f2937;
+      color: #86efac;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 13px;
+      font-family: 'Fira Code', 'JetBrains Mono', Consolas, monospace;
+    }
+    .theory-content .code-block {
+      background: #0d1117;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      padding: 16px;
+      margin: 12px 0;
+      font-family: 'Fira Code', 'JetBrains Mono', Consolas, monospace;
+      font-size: 13px;
+      line-height: 1.6;
+      overflow-x: auto;
+      white-space: pre;
+      color: #e6edf3;
+    }
+
+    .examples-section { margin-bottom: 32px; }
+    .examples-title { font-size: 16px; font-weight: 600; color: #facc15; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+    .example-item { margin-bottom: 24px; }
+    .example-title { font-size: 13px; color: #9ca3af; margin-bottom: 8px; font-weight: 500; }
+    .example-explanation { font-size: 13px; color: #6b7280; margin-top: 8px; font-style: italic; }
+
+    .code-block-wrapper {
+      background: #0d1117;
+      border: 1px solid #30363d;
+      border-radius: 10px;
+      overflow: hidden;
+      margin: 8px 0;
+    }
+    .code-block-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 16px;
+      background: #161b22;
+      border-bottom: 1px solid #30363d;
+    }
+    .code-block-lang { font-size: 11px; color: #8b949e; font-family: monospace; }
+    .code-copy-btn {
+      font-size: 11px;
+      color: #8b949e;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: 4px;
+      transition: all 0.2s;
+    }
+    .code-copy-btn:hover { background: #30363d; color: white; }
+    .code-block-content {
+      padding: 16px;
+      font-family: 'Fira Code', 'JetBrains Mono', Consolas, monospace;
+      font-size: 13px;
+      line-height: 1.6;
+      overflow-x: auto;
+      white-space: pre;
+      color: #e6edf3;
+    }
+    .code-block-content .kw { color: #c084fc; font-weight: 600; }
+    .code-block-content .str { color: #fbbf24; }
+    .code-block-content .num { color: #67e8f9; }
+    .code-block-content .cmt { color: #4ade80; font-style: italic; }
+    .code-block-content .dec { color: #fde047; }
+    .code-block-content .fn { color: #60a5fa; }
+    .code-block-content .bi { color: #f472b6; }
+
+    .exercises-section { margin-bottom: 32px; }
+    .exercises-title { font-size: 16px; font-weight: 600; color: #22d3ee; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+    .exercise-counter { font-size: 13px; color: #6b7280; font-weight: 400; }
+    .exercise-block {
+      background: #111827;
+      border: 1px solid #1f2937;
+      border-radius: 12px;
+      padding: 24px;
+    }
+    .exercise-name { font-size: 16px; font-weight: 600; color: white; margin-bottom: 8px; }
+    .exercise-desc { font-size: 14px; color: #9ca3af; margin-bottom: 16px; line-height: 1.5; }
+
+    .editor-wrapper {
+      background: #0d1117;
+      border: 1px solid #30363d;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .editor-header {
+      padding: 8px 16px;
+      background: #161b22;
+      border-bottom: 1px solid #30363d;
+      font-size: 12px;
+      color: #8b949e;
+      font-family: monospace;
+    }
+    .editor-textarea {
+      width: 100%;
+      min-height: 150px;
+      padding: 16px;
+      background: #0d1117;
+      color: #86efac;
+      border: none;
+      font-family: 'Fira Code', 'JetBrains Mono', Consolas, monospace;
+      font-size: 13px;
+      line-height: 1.6;
+      resize: vertical;
+      outline: none;
+      tab-size: 4;
+    }
+    .editor-textarea::placeholder { color: #4b5563; }
+
+    .btn {
+      padding: 8px 20px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-run { background: #16a34a; color: white; }
+    .btn-run:hover { background: #22c55e; }
+    .btn-hint { background: rgba(234,179,8,0.15); color: #fde047; border: 1px solid rgba(234,179,8,0.3); }
+    .btn-hint:hover { background: rgba(234,179,8,0.25); }
+    .btn-solution { background: rgba(147,51,234,0.15); color: #d8b4fe; border: 1px solid rgba(147,51,234,0.3); }
+    .btn-solution:hover { background: rgba(147,51,234,0.25); }
+    .btn-nav { background: #1f2937; color: #d1d5db; }
+    .btn-nav:hover { background: #374151; }
+    .btn-nav:disabled { opacity: 0.3; cursor: not-allowed; }
+    .btn-complete { background: #16a34a; color: white; }
+    .btn-complete:hover { background: #22c55e; }
+    .btn-complete.done { background: #15803d; cursor: default; }
+    .btn-group { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
+
+    .hint-block {
+      margin-top: 16px;
+      padding: 12px 16px;
+      background: rgba(234,179,8,0.1);
+      border: 1px solid rgba(234,179,8,0.3);
+      border-radius: 8px;
+      color: #fde047;
+      font-size: 14px;
+    }
+    .solution-block { margin-top: 16px; }
+    .solution-label { font-size: 13px; color: #9ca3af; margin-bottom: 8px; }
+
+    .test-results { margin-top: 16px; }
+    .test-results-title { font-size: 13px; color: #d1d5db; font-weight: 500; margin-bottom: 8px; }
+    .test-result-item {
+      padding: 12px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-family: monospace;
+      white-space: pre-line;
+      margin-bottom: 8px;
+    }
+    .test-pass { background: rgba(22,163,74,0.15); border: 1px solid rgba(22,163,74,0.3); color: #86efac; }
+    .test-fail { background: rgba(220,38,38,0.15); border: 1px solid rgba(220,38,38,0.3); color: #fca5a5; }
+    .test-success {
+      margin-top: 12px;
+      padding: 12px;
+      background: rgba(22,163,74,0.15);
+      border: 1px solid #16a34a;
+      border-radius: 8px;
+      text-align: center;
+      color: #86efac;
+      font-weight: 500;
+    }
+
+    .nav-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 24px;
+      border-top: 1px solid #1f2937;
+      margin-top: 32px;
+    }
+
+    .footer {
+      background: #111827;
+      border-top: 1px solid #1f2937;
+      padding: 32px 20px;
+      text-align: center;
+      margin-top: 48px;
+    }
+    .footer-logo { font-size: 24px; margin-bottom: 8px; }
+    .footer-title { font-size: 20px; font-weight: 700; color: #4ade80; margin-bottom: 8px; }
+    .footer-text { font-size: 13px; color: #6b7280; }
+    .footer-sub { font-size: 11px; color: #4b5563; margin-top: 8px; }
+
+    .mobile-progress {
+      display: none;
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: #111827;
+      border-top: 1px solid #1f2937;
+      padding: 10px 16px;
+      z-index: 50;
+    }
+
+    .sidebar-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      z-index: 89;
+    }
+
+    @media (max-width: 1024px) {
+      .hamburger { display: block; }
+      .sidebar {
+        position: fixed;
+        left: 0; top: 56px;
+        z-index: 90;
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+      }
+      .sidebar.open { transform: translateX(0); }
+      .sidebar-overlay.open { display: block; }
+      .progress-container { display: none; }
+      .mobile-progress { display: block; }
+      .main { padding: 20px 16px 80px; }
+      .footer { margin-bottom: 50px; }
+    }
+    @media (max-width: 640px) {
+      .lesson-title { font-size: 22px; }
+      .header-title { font-size: 16px; }
+      .btn { padding: 6px 14px; font-size: 13px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="header-left">
+      <button class="hamburger" id="hamburger" onclick="toggleSidebar()">☰</button>
+      <span class="header-logo">🐍</span>
+      <span class="header-title">PyCodeCamp</span>
+    </div>
+    <div class="progress-container" id="headerProgress"></div>
+    <div class="header-badge" id="headerBadge">⭐ 0 / 0</div>
+  </header>
+
+  <div class="layout">
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+    <aside class="sidebar" id="sidebar"></aside>
+    <main class="main" id="mainContent"></main>
+  </div>
+
+  <div class="mobile-progress" id="mobileProgress"></div>
+
+  <footer class="footer">
+    <div class="footer-logo">🐍</div>
+    <div class="footer-title">PyCodeCamp</div>
+    <div class="footer-text" id="footerText"></div>
+    <div class="footer-sub">Вдохновлено freeCodeCamp • Учитесь программировать бесплатно</div>
+  </footer>
+
+  <script>
+    // ==================== COURSE DATA ====================
+    const courseData = [
+      {
+        id: 'intro', title: 'Введение в Python', icon: '🐍',
+        lessons: [
+          {
+            id: 'intro-1', title: 'Что такое Python?',
+            theory: `Python — это высокоуровневый язык программирования общего назначения, созданный Гвидо ван Россумом и впервые выпущенный в 1991 году.\n\n**Почему Python популярен:**\n- Простой и читаемый синтаксис\n- Огромная стандартная библиотека\n- Активное сообщество\n- Применим в веб-разработке, науке о данных, ИИ, автоматизации\n\n**Особенности Python:**\n- Интерпретируемый язык (не требует компиляции)\n- Динамическая типизация\n- Автоматическое управление памятью\n- Поддержка множественных парадигм (ООП, функциональное, процедурное)\n\nPython использует отступы для определения блоков кода вместо фигурных скобок.`,
+            examples: [
+              { title: 'Первая программа', code: 'print("Привет, мир!")\nprint("Добро пожаловать в Python!")', explanation: 'Функция print() выводит текст на экран. Текст в кавычках называется строкой (string).' },
+              { title: 'Python как калькулятор', code: 'print(2 + 3)\nprint(10 - 4)\nprint(6 * 7)\nprint(15 / 3)', explanation: 'Python может выполнять математические операции: + (сложение), - (вычитание), * (умножение), / (деление).' }
+            ],
+            exercises: [
+              { title: 'Приветствие', description: 'Напишите программу, которая выводит "Hello, Python!"', starterCode: '# Напишите ваш код здесь\n', solution: 'print("Hello, Python!")', hint: 'Используйте функцию print() с текстом в кавычках', tests: [{ expected: 'Hello, Python!', description: 'Выводит "Hello, Python!"' }] }
+            ]
+          },
+          {
+            id: 'intro-2', title: 'Установка и среда разработки',
+            theory: `Для начала работы с Python вам нужно:\n\n**1. Установить Python:**\n- Скачайте с python.org\n- Выберите версию 3.10 или новее\n- При установке на Windows отметьте "Add Python to PATH"\n\n**2. Выбрать редактор кода:**\n- **VS Code** — бесплатный, мощный, с расширениями для Python\n- **PyCharm** — специализированная IDE для Python\n- **Jupyter Notebook** — для научных вычислений и анализа данных\n\n**3. Запуск программ:**\n- Через терминал: \`python program.py\`\n- Через интерактивный режим: \`python\` (REPL)\n- Через IDE — кнопкой "Run"\n\n**Виртуальные окружения:**\n\`\`\`\npython -m venv myenv\nsource myenv/bin/activate  # Linux/Mac\nmyenv\\Scripts\\activate     # Windows\n\`\`\``,
+            examples: [
+              { title: 'Создание файла программы', code: '# Файл: hello.py\nprint("Моя первая программа!")\nprint("Python работает!")', explanation: 'Сохраните код в файл с расширением .py и запустите командой python hello.py' }
+            ],
+            exercises: [
+              { title: 'Множественный вывод', description: 'Выведите три строки: "Строка 1", "Строка 2", "Строка 3" — каждую с новой строки', starterCode: '# Выведите три строки\n', solution: 'print("Строка 1")\nprint("Строка 2")\nprint("Строка 3")', hint: 'Используйте три вызова print()', tests: [{ expected: 'Строка 1\nСтрока 2\nСтрока 3', description: 'Выводит три строки' }] }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'variables', title: 'Переменные и типы данных', icon: '📦',
+        lessons: [
+          {
+            id: 'var-1', title: 'Переменные',
+            theory: `Переменная — это именованная область памяти для хранения данных. В Python не нужно объявлять тип переменной заранее.\n\n**Правила именования переменных:**\n- Начинаются с буквы или символа подчёркивания\n- Содержат буквы, цифры и символы подчёркивания\n- Регистрозависимы (name ≠ Name)\n- Нельзя использовать зарезервированные слова (if, for, class и т.д.)\n\n**Соглашения:**\n- Используйте snake_case: my_variable, user_name\n- Имена должны быть осмысленными\n\n**Присваивание:**\n\`\`\`\nx = 10        # целое число\nname = "Анна" # строка\npi = 3.14     # дробное число\n\`\`\``,
+            examples: [
+              { title: 'Создание переменных', code: 'name = "Алексей"\nage = 25\ncity = "Москва"\n\nprint(name)\nprint(age)\nprint(city)', explanation: 'Мы создали три переменные разных типов и вывели их значения.' },
+              { title: 'Множественное присваивание', code: 'x, y, z = 1, 2, 3\na = b = c = 0\n\nprint(x, y, z)\nprint(a, b, c)', explanation: 'Python позволяет присваивать значения нескольким переменным одновременно.' }
+            ],
+            exercises: [
+              { title: 'Переменные', description: 'Создайте переменные name со значением "Python" и version со значением 3, затем выведите их', starterCode: '# Создайте переменные и выведите их\n', solution: 'name = "Python"\nversion = 3\nprint(name)\nprint(version)', hint: 'Используйте оператор = для присваивания значений', tests: [{ expected: 'Python\n3', description: 'Выводит name и version' }] }
+            ]
+          },
+          {
+            id: 'var-2', title: 'Числовые типы',
+            theory: `Python поддерживает несколько числовых типов:\n\n**int (целые числа):**\n- Неограниченной длины\n- Поддержка двоичных (0b), восьмеричных (0o), шестнадцатеричных (0x)\n\n**float (числа с плавающей точкой):**\n- Двойная точность (64 бита)\n- Записываются с точкой: 3.14, -0.5, 1e10\n\n**Операции:**\n\`\`\`\na + b    # сложение\na - b    # вычитание\na * b    # умножение\na / b    # деление (float)\na // b   # целочисленное деление\na % b    # остаток от деления\na ** b   # возведение в степень\n\`\`\``,
+            examples: [
+              { title: 'Арифметические операции', code: 'a = 17\nb = 5\n\nprint("Сложение:", a + b)\nprint("Вычитание:", a - b)\nprint("Умножение:", a * b)\nprint("Деление:", a / b)\nprint("Целочисленное:", a // b)\nprint("Остаток:", a % b)\nprint("Степень:", a ** b)', explanation: 'Основные арифметические операции в Python.' },
+              { title: 'Типы чисел', code: 'integer = 42\nfloating = 3.14\nnegative = -7\n\nprint(type(integer))\nprint(type(floating))\nprint(type(negative))', explanation: 'Функция type() показывает тип переменной.' }
+            ],
+            exercises: [
+              { title: 'Площадь круга', description: 'Вычислите площадь круга с радиусом 5 (π ≈ 3.14). Выведите результат.', starterCode: 'radius = 5\npi = 3.14\n# Вычислите площадь и выведите\n', solution: 'radius = 5\npi = 3.14\narea = pi * radius ** 2\nprint(area)', hint: 'Площадь круга = π * r². Используйте оператор ** для возведения в степень.', tests: [{ expected: '78.5', description: 'Площадь круга с r=5' }] }
+            ]
+          },
+          {
+            id: 'var-3', title: 'Строки',
+            theory: `Строки (str) — это последовательности символов в Python.\n\n**Создание строк:**\n\`\`\`\ns1 = "Привет"      # двойные кавычки\ns2 = 'Мир'         # одинарные кавычки\ns3 = """Многострочная\nстрока"""           # тройные кавычки\n\`\`\`\n\n**Индексация и срезы:**\n\`\`\`\ns = "Python"\ns[0]    # 'P' — первый символ\ns[-1]   # 'n' — последний символ\ns[0:3]  # 'Pyt' — срез с 0 по 2\n\`\`\`\n\n**Основные методы строк:**\n- len(s) — длина строки\n- s.upper() — в верхний регистр\n- s.lower() — в нижний регистр\n- s.strip() — убрать пробелы по краям\n- s.split() — разбить на список\n- s.replace(old, new) — замена\n- s.find(sub) — поиск подстроки`,
+            examples: [
+              { title: 'Работа со строками', code: 'text = "Hello, World!"\n\nprint(len(text))\nprint(text.upper())\nprint(text.lower())\nprint(text.replace("World", "Python"))\nprint(text.split(", "))', explanation: 'Демонстрация основных методов работы со строками.' },
+              { title: 'Форматирование строк', code: 'name = "Анна"\nage = 25\n\n# f-строки (рекомендуется)\nprint(f"Меня зовут {name}, мне {age} лет")\n\n# format()\nprint("Меня зовут {}, мне {} лет".format(name, age))', explanation: 'Три способа форматирования строк. f-строки — самый современный и удобный.' }
+            ],
+            exercises: [
+              { title: 'Форматирование', description: 'Создайте переменные fruit = "яблоко" и count = 5. Выведите: "У меня 5 яблоко"', starterCode: 'fruit = "яблоко"\ncount = 5\n# Выведите фразу с использованием f-строки\n', solution: 'fruit = "яблоко"\ncount = 5\nprint(f"У меня {count} {fruit}")', hint: 'Используйте f-строку: f"текст {переменная}"', tests: [{ expected: 'У меня 5 яблоко', description: 'Выводит фразу' }] }
+            ]
+          },
+          {
+            id: 'var-4', title: 'Булев тип и приведение типов',
+            theory: `**Булев тип (bool):**\nИмеет только два значения: True и False.\n\n**Операторы сравнения:**\n\`\`\`\n==  # равно       !=  # не равно\n>   # больше      <   # меньше\n>=  # больше или равно\n<=  # меньше или равно\n\`\`\`\n\n**Логические операторы:**\n\`\`\`\nand  # логическое И\nor   # логическое ИЛИ\nnot  # логическое НЕ\n\`\`\`\n\n**Приведение типов:**\n\`\`\`\nint("42")      # строка -> целое число\nfloat("3.14")  # строка -> дробное число\nstr(42)        # число -> строка\nbool(0)        # False\nbool(1)        # True\nbool("")       # False\nbool("text")   # True\n\`\`\``,
+            examples: [
+              { title: 'Булевы выражения', code: 'print(5 > 3)          # True\nprint(5 == 3)         # False\nprint(5 != 3)         # True\nprint(True and False) # False\nprint(True or False)  # True\nprint(not True)       # False', explanation: 'Результаты операций сравнения и логических операций.' },
+              { title: 'Приведение типов', code: 'num_str = "42"\nnum_int = int(num_str)\nprint(num_int + 8)  # 50\n\npi = 3.14\npi_str = str(pi)\nprint("Число Пи: " + pi_str)\n\nprint(bool(0))     # False\nprint(bool(42))    # True\nprint(bool(""))    # False', explanation: 'Преобразование между типами данных.' }
+            ],
+            exercises: [
+              { title: 'Приведение типов', description: 'Преобразуйте строку "100" в число и прибавьте 50. Выведите результат.', starterCode: 'num_str = "100"\n# Преобразуйте и прибавьте 50\n', solution: 'num_str = "100"\nresult = int(num_str) + 50\nprint(result)', hint: 'Используйте int() для преобразования строки в число', tests: [{ expected: '150', description: 'Результат 150' }] }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'control-flow', title: 'Условия и циклы', icon: '🔀',
+        lessons: [
+          {
+            id: 'cf-1', title: 'Условные конструкции',
+            theory: `Условные конструкции позволяют выполнять разный код в зависимости от условий.\n\n**if-elif-else:**\n\`\`\`\nif условие:\n    # код если условие True\nelif другое_условие:\n    # код если другое_условие True\nelse:\n    # код если все условия False\n\`\`\`\n\n**Важно:**\n- Отступы обязательны (4 пробела)\n- elif и else необязательны\n- Можно вкладывать условия друг в друга\n\n**Тернарный оператор:**\n\`\`\`\nresult = "чётное" if x % 2 == 0 else "нечётное"\n\`\`\``,
+            examples: [
+              { title: 'Проверка возраста', code: 'age = 18\n\nif age >= 18:\n    print("Вы совершеннолетний")\nelif age >= 14:\n    print("Вы подросток")\nelse:\n    print("Вы ребёнок")', explanation: 'Программа проверяет возраст и выводит соответствующее сообщение.' },
+              { title: 'Вложенные условия', code: 'number = 15\n\nif number > 0:\n    if number % 2 == 0:\n        print("Положительное чётное")\n    else:\n        print("Положительное нечётное")\nelse:\n    print("Неположительное")', explanation: 'Условия могут быть вложенными для более сложной логики.' }
+            ],
+            exercises: [
+              { title: 'Проверка числа', description: 'Дано число x = -5. Выведите "положительное", "отрицательное" или "ноль".', starterCode: 'x = -5\n# Проверьте число и выведите результат\n', solution: 'x = -5\nif x > 0:\n    print("положительное")\nelif x < 0:\n    print("отрицательное")\nelse:\n    print("ноль")', hint: 'Используйте if/elif/else для проверки знака числа', tests: [{ expected: 'отрицательное', description: 'Выводит "отрицательное"' }] }
+            ]
+          },
+          {
+            id: 'cf-2', title: 'Цикл while',
+            theory: `Цикл while повторяет блок кода, пока условие истинно.\n\n**Синтаксис:**\n\`\`\`\nwhile условие:\n    # код\n    # изменение переменной\n\`\`\`\n\n**Операторы управления циклом:**\n- \`break\` — немедленный выход из цикла\n- \`continue\` — переход к следующей итерации\n\n**Бесконечный цикл (осторожно!):**\n\`\`\`\nwhile True:\n    command = input()\n    if command == "exit":\n        break\n\`\`\``,
+            examples: [
+              { title: 'Счётчик', code: 'count = 1\nwhile count <= 5:\n    print(f"Итерация {count}")\n    count += 1\nprint("Готово!")', explanation: 'Цикл выполняется 5 раз, увеличивая счётчик.' },
+              { title: 'Поиск числа', code: 'number = 1\nwhile number <= 100:\n    if number % 7 == 0:\n        print(f"Найдено: {number}")\n        break\n    number += 1', explanation: 'Ищем первое число, кратное 7, и выходим из цикла.' }
+            ],
+            exercises: [
+              { title: 'Сумма чисел', description: 'С помощью цикла while найдите сумму чисел от 1 до 10 и выведите результат.', starterCode: '# Найдите сумму от 1 до 10\n', solution: 'total = 0\ni = 1\nwhile i <= 10:\n    total += i\n    i += 1\nprint(total)', hint: 'Создайте переменную для суммы и счётчик, увеличивайте счётчик в каждой итерации', tests: [{ expected: '55', description: 'Сумма от 1 до 10 = 55' }] }
+            ]
+          },
+          {
+            id: 'cf-3', title: 'Цикл for',
+            theory: `Цикл for используется для перебора элементов последовательности.\n\n**Синтаксис:**\n\`\`\`\nfor элемент in последовательность:\n    # код\n\`\`\`\n\n**Функция range():**\n\`\`\`\nrange(5)        # 0, 1, 2, 3, 4\nrange(2, 8)     # 2, 3, 4, 5, 6, 7\nrange(0, 10, 2) # 0, 2, 4, 6, 8\n\`\`\`\n\n**enumerate() — индекс и значение:**\n\`\`\`\nfor i, item in enumerate(["a", "b", "c"]):\n    print(f"{i}: {item}")\n\`\`\``,
+            examples: [
+              { title: 'Перебор range', code: 'for i in range(1, 6):\n    print(f"Число: {i}")\n\nprint("---")\n\nfor i in range(0, 10, 2):\n    print(f"Чётное: {i}")', explanation: 'Использование range() для генерации последовательности чисел.' },
+              { title: 'Перебор строки', code: 'word = "Python"\nfor letter in word:\n    print(letter, end=" ")\n\nprint()\nprint("---")\n\nfruits = ["яблоко", "банан", "вишня"]\nfor i, fruit in enumerate(fruits):\n    print(f"{i}: {fruit}")', explanation: 'Перебор символов строки и элементов списка с индексами.' }
+            ],
+            exercises: [
+              { title: 'Таблица умножения', description: 'Выведите таблицу умножения числа 3 от 1 до 5 (формат: "3 x 1 = 3").', starterCode: '# Выведите таблицу умножения для числа 3\n', solution: 'for i in range(1, 6):\n    print(f"3 x {i} = {3 * i}")', hint: 'Используйте for с range(1, 6) и f-строку', tests: [{ expected: '3 x 1 = 3\n3 x 2 = 6\n3 x 3 = 9\n3 x 4 = 12\n3 x 5 = 15', description: 'Таблица умножения' }] }
+            ]
+          },
+          {
+            id: 'cf-4', title: 'Вложенные циклы',
+            theory: `Циклы могут быть вложенными — один цикл внутри другого.\n\n**Паттерны:**\n\`\`\`\nfor i in range(3):        # внешний цикл\n    for j in range(3):    # внутренний цикл\n        print(i, j)\n\`\`\`\n\n**Типичные применения:**\n- Работа с матрицами (таблицами)\n- Генерация паттернов\n- Перебор комбинаций\n\n**Прерывание вложенных циклов:**\n- break прерывает только ближайший цикл\n- Для выхода из всех циклов используйте флаги или функции`,
+            examples: [
+              { title: 'Прямоугольник из звёздочек', code: 'for i in range(4):\n    for j in range(6):\n        print("*", end="")\n    print()  # переход на новую строку', explanation: 'Вложенные циклы создают прямоугольник 4x6 из звёздочек.' },
+              { title: 'Таблица умножения', code: 'for i in range(1, 4):\n    for j in range(1, 6):\n        print(f"{i*j:3}", end="")\n    print()', explanation: 'Таблица умножения с форматированным выводом.' }
+            ],
+            exercises: [
+              { title: 'Пирамида', description: 'Выведите пирамиду из звёздочек высотой 4 строки (1, 3, 5, 7 звёзд).', starterCode: '# Выведите пирамиду\n', solution: 'for i in range(1, 5):\n    print(" " * (4 - i) + "*" * (2 * i - 1))', hint: 'Используйте пробелы для выравнивания и нечётное количество звёзд', tests: [{ expected: '   *\n  ***\n *****\n*******', description: 'Пирамида высотой 4' }] }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'functions', title: 'Функции', icon: '⚡',
+        lessons: [
+          {
+            id: 'func-1', title: 'Определение функций',
+            theory: `Функция — это именованный блок кода, который выполняет определённую задачу.\n\n**Синтаксис:**\n\`\`\`\ndef имя_функции(параметры):\n    # тело функции\n    return результат\n\`\`\`\n\n**Принципы:**\n- Функции должны делать одну вещь\n- Имена функций — snake_case\n- Документируйте функции (docstring)\n- Избегайте побочных эффектов\n\n**Вызов функции:**\n\`\`\`\ndef greet(name):\n    return f"Привет, {name}!"\n\nmessage = greet("Анна")\nprint(message)\n\`\`\``,
+            examples: [
+              { title: 'Простая функция', code: 'def add(a, b):\n    return a + b\n\nresult = add(3, 5)\nprint(result)  # 8\n\n# Функция без return возвращает None\ndef greet(name):\n    print(f"Привет, {name}!")\n\ngreet("Мир")', explanation: 'Функции с return и без него.' },
+              { title: 'Функция с docstring', code: 'def calculate_area(radius):\n    """Вычисляет площадь круга по радиусу."""\n    pi = 3.14159\n    return pi * radius ** 2\n\narea = calculate_area(5)\nprint(f"Площадь: {area:.2f}")', explanation: 'Docstring описывает назначение функции.' }
+            ],
+            exercises: [
+              { title: 'Функция приветствия', description: 'Создайте функцию greet(name), которая возвращает "Привет, {name}!" и вызовите её с аргументом "Python".', starterCode: '# Создайте функцию greet\n# Вызовите её и выведите результат\n', solution: 'def greet(name):\n    return f"Привет, {name}!"\n\nprint(greet("Python"))', hint: 'Используйте def для определения функции и return для возврата значения', tests: [{ expected: 'Привет, Python!', description: 'Выводит приветствие' }] }
+            ]
+          },
+          {
+            id: 'func-2', title: 'Параметры и аргументы',
+            theory: `**Типы параметров:**\n\n**1. Позиционные (обязательные):**\n\`\`\`\ndef add(a, b):\n    return a + b\n\`\`\`\n\n**2. Со значением по умолчанию:**\n\`\`\`\ndef greet(name, greeting="Привет"):\n    return f"{greeting}, {name}!"\n\`\`\`\n\n**3. *args — произвольное количество позиционных:**\n\`\`\`\ndef sum_all(*args):\n    return sum(args)\n\`\`\`\n\n**4. **kwargs — произвольное количество именованных:**\n\`\`\`\ndef info(**kwargs):\n    for key, value in kwargs.items():\n        print(f"{key}: {value}")\n\`\`\`\n\n**Порядок параметров:**\n\`def func(positional, default=val, *args, **kwargs)\``,
+            examples: [
+              { title: 'Параметры по умолчанию', code: 'def power(base, exp=2):\n    return base ** exp\n\nprint(power(3))      # 9 (3²)\nprint(power(2, 10))  # 1024 (2¹⁰)', explanation: 'Параметр exp имеет значение по умолчанию 2.' },
+              { title: '*args', code: 'def multiply(*numbers):\n    result = 1\n    for n in numbers:\n        result *= n\n    return result\n\nprint(multiply(2, 3, 4))       # 24\nprint(multiply(1, 2, 3, 4, 5)) # 120', explanation: '*args позволяет передать любое количество аргументов.' }
+            ],
+            exercises: [
+              { title: 'Функция с параметром по умолчанию', description: 'Создайте функцию introduce(name, city="Москва"), которая выводит "Меня зовут {name}, я из {city}". Вызовите её дважды: с городом и без.', starterCode: '# Создайте функцию introduce\n', solution: 'def introduce(name, city="Москва"):\n    print(f"Меня зовут {name}, я из {city}")\n\nintroduce("Анна", "Санкт-Петербург")\nintroduce("Иван")', hint: 'Используйте параметр по умолчанию city="Москва"', tests: [{ expected: 'Меня зовут Анна, я из Санкт-Петербург\nМеня зовут Иван, я из Москва', description: 'Два вызова функции' }] }
+            ]
+          },
+          {
+            id: 'func-3', title: 'Lambda и встроенные функции',
+            theory: `**Lambda-функции** — анонимные однострочные функции:\n\`\`\`\nsquare = lambda x: x ** 2\nadd = lambda a, b: a + b\n\`\`\`\n\n**Встроенные функции высшего порядка:**\n\n**map() — применить функцию к каждому элементу:**\n\`\`\`\nnumbers = [1, 2, 3, 4, 5]\nsquared = list(map(lambda x: x**2, numbers))\n\`\`\`\n\n**filter() — отфильтровать элементы:**\n\`\`\`\nevens = list(filter(lambda x: x % 2 == 0, numbers))\n\`\`\`\n\n**sorted() — сортировка:**\n\`\`\`\nwords = ["banana", "apple", "cherry"]\nsorted_words = sorted(words, key=len)\n\`\`\``,
+            examples: [
+              { title: 'Lambda функции', code: '# Обычная функция\ndef square(x):\n    return x ** 2\n\n# Эквивалентная lambda\nsquare_lambda = lambda x: x ** 2\n\nprint(square(5))        # 25\nprint(square_lambda(5)) # 25', explanation: 'Lambda — компактная запись простых функций.' },
+              { title: 'map и filter', code: 'numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]\n\n# Квадраты всех чисел\nsquares = list(map(lambda x: x**2, numbers))\nprint("Квадраты:", squares)\n\n# Только чётные\nevens = list(filter(lambda x: x % 2 == 0, numbers))\nprint("Чётные:", evens)', explanation: 'map и filter — мощные инструменты для работы с последовательностями.' }
+            ],
+            exercises: [
+              { title: 'Фильтрация', description: 'Из списка [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] отфильтруйте числа больше 5 и выведите результат.', starterCode: 'numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]\n# Отфильтруйте числа > 5\n', solution: 'numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]\nresult = list(filter(lambda x: x > 5, numbers))\nprint(result)', hint: 'Используйте filter() с lambda-функцией', tests: [{ expected: '[6, 7, 8, 9, 10]', description: 'Числа больше 5' }] }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'collections', title: 'Коллекции данных', icon: '📚',
+        lessons: [
+          {
+            id: 'col-1', title: 'Списки (list)',
+            theory: `Список — упорядоченная изменяемая коллекция элементов.\n\n**Создание:**\n\`\`\`\nempty = []\nnumbers = [1, 2, 3, 4, 5]\nmixed = [1, "hello", True, 3.14]\n\`\`\`\n\n**Основные операции:**\n\`\`\`\nlst = [10, 20, 30, 40, 50]\nlst[0]       # 10 — индексация\nlst[-1]      # 50 — отрицательный индекс\nlst[1:3]     # [20, 30] — срез\nlst.append(60)      # добавить в конец\nlst.insert(0, 5)    # вставить по индексу\nlst.remove(30)      # удалить по значению\nlst.pop()           # удалить и вернуть последний\nlst.sort()          # сортировка\nlen(lst)            # длина\n\`\`\`\n\n**List comprehension:**\n\`\`\`\nsquares = [x**2 for x in range(10)]\nevens = [x for x in range(20) if x % 2 == 0]\n\`\`\``,
+            examples: [
+              { title: 'Работа со списками', code: 'fruits = ["яблоко", "банан", "вишня"]\n\nfruits.append("груша")\nfruits.insert(1, "апельсин")\nprint(fruits)\n\nfruits.remove("банан")\nprint(fruits)\n\nprint(f"Длина: {len(fruits)}")\nprint(f"Первый: {fruits[0]}")\nprint(f"Последний: {fruits[-1]}")', explanation: 'Основные операции со списками.' },
+              { title: 'List comprehension', code: '# Квадраты чисел от 1 до 10\nsquares = [x**2 for x in range(1, 11)]\nprint(squares)\n\n# Чётные числа\nevens = [x for x in range(1, 21) if x % 2 == 0]\nprint(evens)\n\n# Трансформация строк\nwords = ["hello", "world", "python"]\nupper = [w.upper() for w in words]\nprint(upper)', explanation: 'List comprehension — элегантный способ создания списков.' }
+            ],
+            exercises: [
+              { title: 'Список квадратов', description: 'Создайте список квадратов чисел от 1 до 5 с помощью list comprehension и выведите его.', starterCode: '# Создайте список квадратов от 1 до 5\n', solution: 'squares = [x**2 for x in range(1, 6)]\nprint(squares)', hint: 'Используйте [x**2 for x in range(1, 6)]', tests: [{ expected: '[1, 4, 9, 16, 25]', description: 'Квадраты от 1 до 5' }] }
+            ]
+          },
+          {
+            id: 'col-2', title: 'Кортежи и множества',
+            theory: `**Кортеж (tuple)** — неизменяемый список:\n\`\`\`\ncoords = (10, 20)\ncolors = ("red", "green", "blue")\n\n# Распаковка\nx, y = coords\nprint(x, y)  # 10 20\n\`\`\`\n\n**Множество (set)** — неупорядоченная коллекция уникальных элементов:\n\`\`\`\ns = {1, 2, 3, 2, 1}  # {1, 2, 3}\n\n# Операции\na = {1, 2, 3, 4}\nb = {3, 4, 5, 6}\na | b   # объединение {1, 2, 3, 4, 5, 6}\na & b   # пересечение {3, 4}\na - b   # разность {1, 2}\na ^ b   # симметрическая разность {1, 2, 5, 6}\n\`\`\``,
+            examples: [
+              { title: 'Кортежи', code: 'point = (3, 7)\nx, y = point\nprint(f"x={x}, y={y}")\n\n# Кортеж из функции\ndef min_max(numbers):\n    return min(numbers), max(numbers)\n\nresult = min_max([4, 2, 8, 1, 9])\nprint(f"Мин: {result[0]}, Макс: {result[1]}")', explanation: 'Кортежи и распаковка.' },
+              { title: 'Множества', code: 'a = {1, 2, 3, 4, 5}\nb = {4, 5, 6, 7, 8}\n\nprint("Объединение:", a | b)\nprint("Пересечение:", a & b)\nprint("Разность:", a - b)\n\n# Удаление дубликатов\nnumbers = [1, 2, 2, 3, 3, 3, 4]\nunique = list(set(numbers))\nprint("Уникальные:", unique)', explanation: 'Операции с множествами и удаление дубликатов.' }
+            ],
+            exercises: [
+              { title: 'Уникальные элементы', description: 'Дан список [1, 2, 2, 3, 3, 3, 4, 4, 5]. Выведите только уникальные элементы в виде списка.', starterCode: 'numbers = [1, 2, 2, 3, 3, 3, 4, 4, 5]\n# Получите уникальные элементы\n', solution: 'numbers = [1, 2, 2, 3, 3, 3, 4, 4, 5]\nunique = list(set(numbers))\nprint(unique)', hint: 'Преобразуйте список в множество и обратно', tests: [{ expected: '[1, 2, 3, 4, 5]', description: 'Уникальные элементы' }] }
+            ]
+          },
+          {
+            id: 'col-3', title: 'Словари (dict)',
+            theory: `Словарь — коллекция пар ключ-значение.\n\n**Создание:**\n\`\`\`\nperson = {"name": "Анна", "age": 25, "city": "Москва"}\nempty = {}\n\`\`\`\n\n**Основные операции:**\n\`\`\`\nd = {"a": 1, "b": 2, "c": 3}\nd["a"]          # 1 — доступ по ключу\nd.get("d", 0)  # 0 — с значением по умолчанию\nd["d"] = 4     # добавить/изменить\ndel d["a"]     # удалить\n"a" in d       # проверка наличия\n\n# Перебор\nfor key, value in d.items():\n    print(f"{key}: {value}")\n\nd.keys()    # все ключи\nd.values()  # все значения\nd.items()   # все пары\n\`\`\`\n\n**Dict comprehension:**\n\`\`\`\nsquares = {x: x**2 for x in range(5)}\n\`\`\``,
+            examples: [
+              { title: 'Работа со словарями', code: 'student = {\n    "name": "Иван",\n    "age": 20,\n    "grades": [5, 4, 5, 3, 5]\n}\n\nprint(student["name"])\nprint(student.get("email", "не указан"))\n\nstudent["email"] = "ivan@mail.ru"\nstudent["age"] = 21\n\nfor key, value in student.items():\n    print(f"{key}: {value}")', explanation: 'Создание, доступ и изменение словаря.' },
+              { title: 'Подсчёт элементов', code: 'text = "hello world"\ncount = {}\n\nfor char in text:\n    if char in count:\n        count[char] += 1\n    else:\n        count[char] = 1\n\nfor char, freq in sorted(count.items()):\n    if char != " ":\n        print(f"\'{char}\': {freq}")', explanation: 'Подсчёт частоты символов в строке.' }
+            ],
+            exercises: [
+              { title: 'Словарь', description: 'Создайте словарь с ключами "name", "age", "city" и выведите все пары ключ-значение.', starterCode: '# Создайте словарь о себе\n', solution: 'person = {"name": "Алексей", "age": 30, "city": "Казань"}\nfor key, value in person.items():\n    print(f"{key}: {value}")', hint: 'Используйте .items() для перебора словаря', tests: [{ expected: 'name: Алексей\nage: 30\ncity: Казань', description: 'Выводит пары ключ-значение' }] }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'oop', title: 'Объектно-ориентированное программирование', icon: '🏗️',
+        lessons: [
+          {
+            id: 'oop-1', title: 'Классы и объекты',
+            theory: `ООП — парадигма программирования, основанная на объектах.\n\n**Класс** — шаблон для создания объектов.\n**Объект (экземпляр)** — конкретная реализация класса.\n\n**Синтаксис:**\n\`\`\`\nclass ClassName:\n    def __init__(self, params):\n        self.attribute = value\n    \n    def method(self):\n        # код\n\`\`\`\n\n**Ключевые понятия:**\n- \`__init__\` — конструктор (вызывается при создании объекта)\n- \`self\` — ссылка на текущий объект\n- Атрибуты — данные объекта\n- Методы — функции объекта`,
+            examples: [
+              { title: 'Простой класс', code: 'class Dog:\n    def __init__(self, name, breed):\n        self.name = name\n        self.breed = breed\n    \n    def bark(self):\n        return f"{self.name} говорит: Гав!"\n    \n    def info(self):\n        return f"{self.name} — {self.breed}"\n\n# Создание объектов\nmy_dog = Dog("Рекс", "Немецкая овчарка")\nprint(my_dog.bark())\nprint(my_dog.info())', explanation: 'Класс Dog с конструктором и методами.' },
+              { title: 'Класс с вычислениями', code: 'class Circle:\n    pi = 3.14159  # атрибут класса\n    \n    def __init__(self, radius):\n        self.radius = radius\n    \n    def area(self):\n        return self.pi * self.radius ** 2\n    \n    def circumference(self):\n        return 2 * self.pi * self.radius\n\nc = Circle(5)\nprint(f"Площадь: {c.area():.2f}")\nprint(f"Длина окружности: {c.circumference():.2f}")', explanation: 'Класс Circle с атрибутами класса и экземпляра.' }
+            ],
+            exercises: [
+              { title: 'Класс Rectangle', description: 'Создайте класс Rectangle с атрибутами width и height, методом area() и методом perimeter(). Создайте объект 4x5 и выведите площадь и периметр.', starterCode: '# Создайте класс Rectangle\n', solution: 'class Rectangle:\n    def __init__(self, width, height):\n        self.width = width\n        self.height = height\n    \n    def area(self):\n        return self.width * self.height\n    \n    def perimeter(self):\n        return 2 * (self.width + self.height)\n\nr = Rectangle(4, 5)\nprint(f"Площадь: {r.area()}")\nprint(f"Периметр: {r.perimeter()}")', hint: 'Создайте __init__ с width и height, затем методы area и perimeter', tests: [{ expected: 'Площадь: 20\nПериметр: 18', description: 'Площадь и периметр прямоугольника 4x5' }] }
+            ]
+          },
+          {
+            id: 'oop-2', title: 'Наследование',
+            theory: `Наследование позволяет создавать новые классы на основе существующих.\n\n**Синтаксис:**\n\`\`\`\nclass Parent:\n    pass\n\nclass Child(Parent):\n    pass\n\`\`\`\n\n**Принципы:**\n- Дочерний класс наследует все атрибуты и методы родителя\n- Может добавлять новые и переопределять существующие\n- \`super()\` — вызов методов родительского класса\n\n**Полиморфизм:**\nРазные классы могут иметь методы с одинаковыми именами.`,
+            examples: [
+              { title: 'Наследование', code: 'class Animal:\n    def __init__(self, name):\n        self.name = name\n    \n    def speak(self):\n        return "..."\n\nclass Cat(Animal):\n    def speak(self):\n        return f"{self.name}: Мяу!"\n\nclass Dog(Animal):\n    def speak(self):\n        return f"{self.name}: Гав!"\n\nanimals = [Cat("Мурка"), Dog("Шарик")]\nfor animal in animals:\n    print(animal.speak())', explanation: 'Полиморфизм — разные реализации метода speak().' },
+              { title: 'super()', code: 'class Shape:\n    def __init__(self, color):\n        self.color = color\n    \n    def describe(self):\n        return f"Фигура цвета {self.color}"\n\nclass Circle(Shape):\n    def __init__(self, color, radius):\n        super().__init__(color)\n        self.radius = radius\n    \n    def describe(self):\n        return f"Круг цвета {self.color}, радиус {self.radius}"\n\nc = Circle("красный", 5)\nprint(c.describe())', explanation: 'super() вызывает конструктор родительского класса.' }
+            ],
+            exercises: [
+              { title: 'Наследование', description: 'Создайте базовый класс Vehicle с методом move() (выводит "Движется") и дочерний класс Car, который переопределяет move() на "Едет по дороге". Создайте объект и вызовите move().', starterCode: '# Создайте классы Vehicle и Car\n', solution: 'class Vehicle:\n    def move(self):\n        print("Движется")\n\nclass Car(Vehicle):\n    def move(self):\n        print("Едет по дороге")\n\ncar = Car()\ncar.move()', hint: 'Используйте class Car(Vehicle) и переопределите метод move', tests: [{ expected: 'Едет по дороге', description: 'Вызов метода move()' }] }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'files-errors', title: 'Файлы и обработка ошибок', icon: '📁',
+        lessons: [
+          {
+            id: 'fe-1', title: 'Работа с файлами',
+            theory: `Python предоставляет встроенные средства для работы с файлами.\n\n**Открытие файла:**\n\`\`\`\nf = open("file.txt", "r")  # чтение\nf = open("file.txt", "w")  # запись (перезапись)\nf = open("file.txt", "a")  # добавление\nf.close()\n\`\`\`\n\n**Рекомендуемый способ — with:**\n\`\`\`\nwith open("file.txt", "r") as f:\n    content = f.read()\n\`\`\`\n\n**Методы чтения:**\n- f.read() — весь файл\n- f.readline() — одна строка\n- f.readlines() — список строк\n\n**Запись:**\n\`\`\`\nwith open("output.txt", "w") as f:\n    f.write("Текст\\n")\n    f.writelines(["строка 1\\n", "строка 2\\n"])\n\`\`\``,
+            examples: [
+              { title: 'Чтение и запись', code: '# Запись в файл\nwith open("example.txt", "w") as f:\n    f.write("Привет, мир!\\n")\n    f.write("Python работает с файлами\\n")\n\n# Чтение из файла\nwith open("example.txt", "r") as f:\n    content = f.read()\n    print(content)', explanation: 'Запись и чтение файла с использованием with.' },
+              { title: 'Построчное чтение', code: '# Создание файла для примера\nwith open("data.txt", "w") as f:\n    f.write("Строка 1\\nСтрока 2\\nСтрока 3\\n")\n\n# Построчное чтение\nwith open("data.txt", "r") as f:\n    for i, line in enumerate(f, 1):\n        print(f"{i}: {line.strip()}")', explanation: 'Построчное чтение файла с нумерацией.' }
+            ],
+            exercises: [
+              { title: 'Работа со строками', description: 'Создайте список строк ["Python", "это", "круто"], объедините их через пробел и выведите.', starterCode: 'lines = ["Python", "это", "круто"]\n# Объедините и выведите\n', solution: 'lines = ["Python", "это", "круто"]\nresult = " ".join(lines)\nprint(result)', hint: 'Используйте метод " ".join(список)', tests: [{ expected: 'Python это круто', description: 'Объединённая строка' }] }
+            ]
+          },
+          {
+            id: 'fe-2', title: 'Обработка исключений',
+            theory: `Исключения (errors) возникают во время выполнения программы.\n\n**try-except:**\n\`\`\`\ntry:\n    # код, который может вызвать ошибку\nexcept ExceptionType:\n    # обработка ошибки\nfinally:\n    # выполняется всегда\n\`\`\`\n\n**Типы исключений:**\n- ValueError — неверное значение\n- TypeError — неверный тип\n- ZeroDivisionError — деление на ноль\n- FileNotFoundError — файл не найден\n- IndexError — индекс вне диапазона\n- KeyError — ключ не найден\n\n**Генерация исключений:**\n\`\`\`\nraise ValueError("Недопустимое значение")\n\`\`\``,
+            examples: [
+              { title: 'Базовая обработка', code: 'try:\n    number = int(input("Введите число: "))\n    result = 10 / number\n    print(f"Результат: {result}")\nexcept ValueError:\n    print("Это не число!")\nexcept ZeroDivisionError:\n    print("Нельзя делить на ноль!")\nexcept Exception as e:\n    print(f"Ошибка: {e}")\nfinally:\n    print("Программа завершена")', explanation: 'Обработка различных типов исключений.' },
+              { title: 'Собственное исключение', code: 'class AgeError(Exception):\n    pass\n\ndef set_age(age):\n    if age < 0:\n        raise AgeError("Возраст не может быть отрицательным")\n    if age > 150:\n        raise AgeError("Недопустимый возраст")\n    return age\n\ntry:\n    my_age = set_age(-5)\nexcept AgeError as e:\n    print(f"Ошибка: {e}")', explanation: 'Создание и использование пользовательского исключения.' }
+            ],
+            exercises: [
+              { title: 'Безопасное деление', description: 'Напишите код, который пытается разделить 10 на 0 и обрабатывает ZeroDivisionError, выводя "Ошибка: деление на ноль".', starterCode: '# Безопасное деление\n', solution: 'try:\n    result = 10 / 0\nexcept ZeroDivisionError:\n    print("Ошибка: деление на ноль")', hint: 'Используйте try-except с ZeroDivisionError', tests: [{ expected: 'Ошибка: деление на ноль', description: 'Обработка деления на ноль' }] }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'advanced', title: 'Продвинутые темы', icon: '🚀',
+        lessons: [
+          {
+            id: 'adv-1', title: 'Декораторы',
+            theory: `Декоратор — функция, которая расширяет поведение другой функции.\n\n**Синтаксис:**\n\`\`\`\n@decorator\ndef function():\n    pass\n\`\`\`\n\n**Как это работает:**\n\`\`\`\n@my_decorator\ndef func():\n    pass\n\n# Эквивалентно:\nfunc = my_decorator(func)\n\`\`\`\n\n**Применение:**\n- Логирование\n- Измерение времени выполнения\n- Проверка прав доступа\n- Кэширование`,
+            examples: [
+              { title: 'Простой декоратор', code: 'def timer(func):\n    import time\n    def wrapper(*args, **kwargs):\n        start = time.time()\n        result = func(*args, **kwargs)\n        end = time.time()\n        print(f"{func.__name__} выполнена за {end-start:.4f} сек")\n        return result\n    return wrapper\n\n@timer\ndef slow_function():\n    total = sum(range(1000000))\n    return total\n\nresult = slow_function()\nprint(f"Результат: {result}")', explanation: 'Декоратор измеряет время выполнения функции.' },
+              { title: 'Декоратор для логирования', code: 'def logger(func):\n    def wrapper(*args, **kwargs):\n        print(f"Вызов {func.__name__}({args}, {kwargs})")\n        result = func(*args, **kwargs)\n        print(f"Результат: {result}")\n        return result\n    return wrapper\n\n@logger\ndef add(a, b):\n    return a + b\n\nadd(3, 5)', explanation: 'Декоратор логирует вызовы функции и их результаты.' }
+            ],
+            exercises: [
+              { title: 'Декоратор повторения', description: 'Создайте декоратор repeat(n), который вызывает функцию n раз. Примените к функции, выводящей "Привет!" 3 раза.', starterCode: '# Создайте декоратор repeat\n', solution: 'def repeat(n):\n    def decorator(func):\n        def wrapper():\n            for _ in range(n):\n                func()\n        return wrapper\n    return decorator\n\n@repeat(3)\ndef say_hello():\n    print("Привет!")\n\nsay_hello()', hint: 'Декоратор с параметром — это функция, возвращающая декоратор', tests: [{ expected: 'Привет!\nПривет!\nПривет!', description: 'Функция вызвана 3 раза' }] }
+            ]
+          },
+          {
+            id: 'adv-2', title: 'Генераторы',
+            theory: `Генераторы — функции, которые возвращают элементы по одному с помощью yield.\n\n**Преимущества:**\n- Экономия памяти (не хранят все значения сразу)\n- Ленивые вычисления\n- Бесконечные последовательности\n\n**Синтаксис:**\n\`\`\`\ndef my_generator():\n    yield 1\n    yield 2\n    yield 3\n\`\`\`\n\n**Генераторные выражения:**\n\`\`\`\nsquares = (x**2 for x in range(10))  # круглые скобки\n\`\`\``,
+            examples: [
+              { title: 'Генератор чисел Фибоначчи', code: 'def fibonacci(n):\n    a, b = 0, 1\n    for _ in range(n):\n        yield a\n        a, b = b, a + b\n\n# Использование\nfor num in fibonacci(10):\n    print(num, end=" ")', explanation: 'Генератор создаёт числа Фибоначчи по запросу.' },
+              { title: 'Бесконечный генератор', code: 'def counter(start=0):\n    n = start\n    while True:\n        yield n\n        n += 1\n\n# Используем только первые 5 значений\nc = counter()\nfor _ in range(5):\n    print(next(c), end=" ")', explanation: 'Бесконечный генератор с использованием next().' }
+            ],
+            exercises: [
+              { title: 'Генератор степеней', description: 'Создайте генератор powers(base, max_exp), который возвращает base**0, base**1, ..., base**(max_exp-1). Выведите powers(2, 5).', starterCode: '# Создайте генератор powers\n', solution: 'def powers(base, max_exp):\n    for i in range(max_exp):\n        yield base ** i\n\nfor p in powers(2, 5):\n    print(p)', hint: 'Используйте yield в цикле for', tests: [{ expected: '1\n2\n4\n8\n16', description: 'Степени двойки' }] }
+            ]
+          },
+          {
+            id: 'adv-3', title: 'Модули и импорты',
+            theory: `Модуль — файл с Python-кодом. Пакет — директория с модулями.\n\n**Импорт:**\n\`\`\`\nimport math\nfrom datetime import datetime\nimport os.path as osp\nfrom collections import Counter, defaultdict\n\`\`\`\n\n**Полезные стандартные модули:**\n- math — математические функции\n- random — случайные числа\n- datetime — дата и время\n- os, sys — взаимодействие с ОС\n- json — работа с JSON\n- re — регулярные выражения\n- collections — специальные коллекции\n\n**Создание своего модуля:**\n\`\`\`\n# mymodule.py\ndef greet(name):\n    return f"Hello, {name}!"\n\n# main.py\nimport mymodule\nprint(mymodule.greet("World"))\n\`\`\``,
+            examples: [
+              { title: 'Модуль math', code: 'import math\n\nprint(f"π = {math.pi:.4f}")\nprint(f"e = {math.e:.4f}")\nprint(f"√16 = {math.sqrt(16)}")\nprint(f"sin(90°) = {math.sin(math.pi/2):.4f}")\nprint(f"log₂(8) = {math.log2(8):.0f}")\nprint(f"5! = {math.factorial(5)}")', explanation: 'Использование математических функций из модуля math.' },
+              { title: 'Модуль random', code: 'import random\n\n# Случайное целое число\nprint(f"Случайное 1-10: {random.randint(1, 10)}")\n\n# Случайный элемент\nfruits = ["яблоко", "банан", "вишня", "груша"]\nprint(f"Случайный фрукт: {random.choice(fruits)}")\n\n# Перемешивание\nrandom.shuffle(fruits)\nprint(f"Перемешанные: {fruits}")', explanation: 'Генерация случайных чисел и выбор элементов.' }
+            ],
+            exercises: [
+              { title: 'Математические вычисления', description: 'Используя модуль math, вычислите и выведите: √144, 2^10 (через math.pow), факториал 6.', starterCode: 'import math\n# Вычислите и выведите\n', solution: 'import math\nprint(math.sqrt(144))\nprint(int(math.pow(2, 10)))\nprint(math.factorial(6))', hint: 'Используйте math.sqrt(), math.pow() и math.factorial()', tests: [{ expected: '12.0\n1024\n720', description: 'Математические вычисления' }] }
+            ]
+          }
+        ]
+      }
+    ];
+
+    // ==================== STATE ====================
+    let state = {
+      activeSection: 0,
+      activeLesson: 0,
+      activeExercise: 0,
+      completedLessons: new Set(JSON.parse(localStorage.getItem('pycodecamp-progress') || '[]')),
+      editorCode: '',
+      showSolution: false,
+      showHint: false,
+      testResults: null,
+      sidebarOpen: false
+    };
+
+    // ==================== HELPERS ====================
+    function getTotalLessons() {
+      return courseData.reduce((sum, s) => sum + s.lessons.length, 0);
+    }
+
+    function saveProgress() {
+      localStorage.setItem('pycodecamp-progress', JSON.stringify([...state.completedLessons]));
+    }
+
+    function escapeHtml(str) {
+      return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#x27;');
+    }
+
+    function highlightPython(code) {
+      const keywords = ['def','class','if','elif','else','for','while','return','import','from','as','try','except','finally','raise','with','yield','lambda','pass','break','continue','and','or','not','in','is','True','False','None','self','del','global','nonlocal','assert'];
+      const builtins = ['print','range','len','int','float','str','bool','list','dict','set','tuple','type','super','input','open','map','filter','sorted','enumerate','zip','sum','min','max','abs','round','next','iter','isinstance','hasattr','getattr','setattr'];
+      const methods = ['append','insert','remove','pop','sort','reverse','copy','clear','extend','index','count','join','split','strip','replace','find','upper','lower','format','items','keys','values','get','update','startswith','endswith'];
+
+      let lines = code.split('\n');
+      return lines.map(line => {
+        if (line.trim().startsWith('#')) {
+          return '<span class="cmt">' + escapeHtml(line) + '</span>';
+        }
+        let result = escapeHtml(line);
+        result = result.replace(/(f?&quot;[^&]*?&quot;|f?&#x27;[^&]*?&#x27;|f?"[^"]*?"|f?'[^']*?')/g, '<span class="str">$1</span>');
+        result = result.replace(/(@\w+)/g, '<span class="dec">$1</span>');
+        keywords.forEach(kw => {
+          result = result.replace(new RegExp('\\b(' + kw + ')\\b', 'g'), '<span class="kw">$1</span>');
+        });
+        builtins.forEach(bi => {
+          result = result.replace(new RegExp('\\b(' + bi + ')\\b', 'g'), '<span class="bi">$1</span>');
+        });
+        methods.forEach(m => {
+          result = result.replace(new RegExp('\\.(' + m + ')\\b', 'g'), '.<span class="fn">$1</span>');
+        });
+        result = result.replace(/\b(\d+\.?\d*)\b/g, '<span class="num">$1</span>');
+        return result;
+      }).join('\n');
+    }
+
+    function renderCodeBlock(code) {
+      return '<div class="code-block-wrapper">' +
+        '<div class="code-block-header">' +
+          '<span class="code-block-lang">python</span>' +
+          '<button class="code-copy-btn" onclick="copyCode(this)">📋 Копировать</button>' +
+        '</div>' +
+        '<div class="code-block-content">' + highlightPython(code) + '</div>' +
+      '</div>';
+    }
+
+    function copyCode(btn) {
+      var code = btn.closest('.code-block-wrapper').querySelector('.code-block-content').textContent;
+      navigator.clipboard.writeText(code).then(function() {
+        btn.textContent = '✅ Скопировано!';
+        setTimeout(function() { btn.textContent = '📋 Копировать'; }, 2000);
+      });
+    }
+
+    function renderTheory(theory) {
+      var html = '';
+      var lines = theory.split('\n');
+      var inCodeBlock = false;
+      var codeContent = '';
+
+      for (var i = 0; i < lines.length; i++) {
+        var line = lines[i];
+        if (line.trim().startsWith('```')) {
+          if (inCodeBlock) {
+            html += '<div class="code-block">' + escapeHtml(codeContent.trim()) + '</div>';
+            codeContent = '';
+            inCodeBlock = false;
+          } else {
+            inCodeBlock = true;
+          }
+          continue;
+        }
+        if (inCodeBlock) {
+          codeContent += line + '\n';
+          continue;
+        }
+        if (line.startsWith('**') && line.endsWith('**')) {
+          html += '<p style="font-weight:bold;color:white;margin-top:12px;">' + line.replace(/\*\*/g,'') + '</p>';
+        } else if (line.startsWith('- ')) {
+          html += '<p style="margin-left:16px;">• ' + renderInline(line.slice(2)) + '</p>';
+        } else if (line.trim() === '') {
+          html += '<br>';
+        } else {
+          html += '<p>' + renderInline(line) + '</p>';
+        }
+      }
+      return html;
+    }
+
+    function renderInline(text) {
+      return text.replace(/`([^`]+)`/g, '<code>$1</code>').replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+    }
+
+    // ==================== PYTHON CODE SIMULATOR ====================
+    function simulatePython(code) {
+      var output = [];
+      var variables = {};
+      var functions = {};
+      var classes = {};
+      var lines = code.split('\n');
+
+      function evalExpr(expr, localVars) {
+        if (!localVars) localVars = {};
+        expr = expr.trim();
+        var allVars = {};
+        for (var k in variables) allVars[k] = variables[k];
+        for (var k in localVars) allVars[k] = localVars[k];
+
+        if ((expr.startsWith('"') && expr.endsWith('"')) || (expr.startsWith("'") && expr.endsWith("'"))) {
+          return expr.slice(1, -1);
+        }
+        if ((expr.startsWith('f"') && expr.endsWith('"')) || (expr.startsWith("f'") && expr.endsWith("'"))) {
+          var s = expr.slice(2, -1);
+          s = s.replace(/\{([^}]+)\}/g, function(_, inner) {
+            var parts = inner.split(':');
+            var varPart = parts[0];
+            var fmt = parts[1] || '';
+            var val = evalExpr(varPart.trim(), localVars);
+            if (fmt.endsWith('f')) {
+              var prec = parseInt((fmt.match(/\.(\d+)/) || [,'2'])[1]);
+              return Number(val).toFixed(prec);
+            }
+            if (fmt.endsWith('d')) return Math.floor(Number(val)).toString();
+            return String(val);
+          });
+          return s;
+        }
+        if (expr.startsWith('[') && expr.endsWith(']')) {
+          try { return JSON.parse(expr); } catch(e) {}
+          // list comp
+          var lcMatch = expr.match(/^\[(.+?)\s+for\s+(\w+)\s+in\s+(.+?)(?:\s+if\s+(.+))?\]$/);
+          if (lcMatch) {
+            var items = evaluateIterable(lcMatch[3], localVars);
+            var result = [];
+            for (var idx = 0; idx < items.length; idx++) {
+              var lv = {};
+              for (var k in localVars) lv[k] = localVars[k];
+              lv[lcMatch[2]] = items[idx];
+              if (lcMatch[4]) {
+                if (!evalCondition(lcMatch[4], lv)) continue;
+              }
+              result.push(evalExpr(lcMatch[1], lv));
+            }
+            return result;
+          }
+          return expr;
+        }
+        if (/^-?\d+(\.\d+)?$/.test(expr)) return Number(expr);
+        if (expr === 'True') return true;
+        if (expr === 'False') return false;
+        if (expr === 'None') return null;
+        if (allVars.hasOwnProperty(expr)) return allVars[expr];
+
+        // Arithmetic with variables substituted
+        try {
+          var safeExpr = expr;
+          // Sort by length descending to avoid partial replacements
+          var varNames = Object.keys(allVars).sort(function(a,b) { return b.length - a.length; });
+          for (var vi = 0; vi < varNames.length; vi++) {
+            var vn = varNames[vi];
+            var vv = allVars[vn];
+            var replacement = typeof vv === 'string' ? '"' + vv + '"' : (typeof vv === 'boolean' ? (vv ? 'true' : 'false') : String(vv));
+            safeExpr = safeExpr.replace(new RegExp('\\b' + vn.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b', 'g'), replacement);
+          }
+          safeExpr = safeExpr.replace(/\*\*/g, '**');
+          var res = Function('"use strict"; return (' + safeExpr + ')')();
+          return res;
+        } catch(e) {}
+
+        // Function call
+        var funcMatch = expr.match(/^(\w+)\((.*)?\)$/);
+        if (funcMatch) {
+          var fname = funcMatch[1];
+          var argsStr = funcMatch[2] || '';
+          if (fname === 'str') return String(evalExpr(argsStr, localVars));
+          if (fname === 'int') return parseInt(evalExpr(argsStr, localVars));
+          if (fname === 'float') return parseFloat(evalExpr(argsStr, localVars));
+          if (fname === 'len') {
+            var val = evalExpr(argsStr, localVars);
+            if (typeof val === 'string' || Array.isArray(val)) return val.length;
+            if (typeof val === 'object' && val !== null) return Object.keys(val).length;
+          }
+          if (fname === 'type') {
+            var val = evalExpr(argsStr, localVars);
+            if (Number.isInteger(val)) return "<class 'int'>";
+            if (typeof val === 'number') return "<class 'float'>";
+            if (typeof val === 'string') return "<class 'str'>";
+            if (typeof val === 'boolean') return "<class 'bool'>";
+            if (Array.isArray(val)) return "<class 'list'>";
+            return "<class 'object'>";
+          }
+          if (fname === 'bool') return Boolean(evalExpr(argsStr, localVars));
+          if (fname === 'abs') return Math.abs(evalExpr(argsStr, localVars));
+          if (fname === 'round') return Math.round(evalExpr(argsStr, localVars));
+          if (fname === 'sum') {
+            var arr = evalExpr(argsStr, localVars);
+            if (Array.isArray(arr)) return arr.reduce(function(a,b){return a+b;}, 0);
+          }
+          if (fname === 'min') {
+            var arr = parseArgs(argsStr, localVars);
+            if (arr.length === 1 && Array.isArray(arr[0])) return Math.min.apply(null, arr[0]);
+            return Math.min.apply(null, arr);
+          }
+          if (fname === 'max') {
+            var arr = parseArgs(argsStr, localVars);
+            if (arr.length === 1 && Array.isArray(arr[0])) return Math.max.apply(null, arr[0]);
+            return Math.max.apply(null, arr);
+          }
+          if (functions[fname]) {
+            var func = functions[fname];
+            var args = parseArgs(argsStr, localVars);
+            var localV = {};
+            for (var pi = 0; pi < func.params.length; pi++) {
+              var p = func.params[pi];
+              if (pi < args.length) localV[p] = args[pi];
+              else if (func.defaults[p] !== undefined) localV[p] = func.defaults[p];
+            }
+            return executeBlock(func.body, localV);
+          }
+        }
+
+        // Method calls
+        var methodMatch = expr.match(/^(.+)\.(\w+)\((.*)?\)$/);
+        if (methodMatch) {
+          var obj = evalExpr(methodMatch[1], localVars);
+          var method = methodMatch[2];
+          var mArgs = methodMatch[3] !== undefined ? parseArgs(methodMatch[3], localVars) : [];
+          if (typeof obj === 'string') {
+            switch(method) {
+              case 'upper': return obj.toUpperCase();
+              case 'lower': return obj.toLowerCase();
+              case 'strip': return obj.trim();
+              case 'split': return obj.split(mArgs[0] || ' ');
+              case 'replace': return obj.split(mArgs[0]).join(mArgs[1]);
+              case 'find': return obj.indexOf(mArgs[0]);
+              case 'join': return Array.isArray(mArgs[0]) ? mArgs[0].join(obj) : '';
+              case 'format': {
+                var s = obj;
+                for (var ai = 0; ai < mArgs.length; ai++) s = s.replace('{}', String(mArgs[ai]));
+                return s;
+              }
+              case 'startswith': return obj.startsWith(mArgs[0]);
+              case 'endswith': return obj.endsWith(mArgs[0]);
+            }
+          }
+          if (Array.isArray(obj)) {
+            switch(method) {
+              case 'append': obj.push(mArgs[0]); return null;
+              case 'insert': obj.splice(mArgs[0], 0, mArgs[1]); return null;
+              case 'remove': { var idx = obj.indexOf(mArgs[0]); if(idx>=0) obj.splice(idx,1); return null; }
+              case 'pop': return obj.length > 0 ? obj.pop() : null;
+              case 'sort': obj.sort(function(a,b){return a-b;}); return null;
+              case 'reverse': obj.reverse(); return null;
+            }
+          }
+          if (typeof obj === 'object' && obj !== null && !Array.isArray(obj)) {
+            switch(method) {
+              case 'items': return Object.entries(obj);
+              case 'keys': return Object.keys(obj);
+              case 'values': return Object.values(obj);
+              case 'get': return obj.hasOwnProperty(mArgs[0]) ? obj[mArgs[0]] : (mArgs.length > 1 ? mArgs[1] : null);
+            }
+          }
+        }
+
+        // filter/map/list/set/sorted/range
+        var filterMatch = expr.match(/^filter\(lambda\s+(\w+):\s*(.+),\s*(.+)\)$/);
+        if (filterMatch) {
+          var items = evaluateIterable(filterMatch[3], localVars);
+          return items.filter(function(item) {
+            var lv = {};
+            for (var k in localVars) lv[k] = localVars[k];
+            lv[filterMatch[1]] = item;
+            return evalCondition(filterMatch[2], lv);
+          });
+        }
+        var mapMatch = expr.match(/^map\(lambda\s+(\w+):\s*(.+),\s*(.+)\)$/);
+        if (mapMatch) {
+          var items = evaluateIterable(mapMatch[3], localVars);
+          return items.map(function(item) {
+            var lv = {};
+            for (var k in localVars) lv[k] = localVars[k];
+            lv[mapMatch[1]] = item;
+            return evalExpr(mapMatch[2], lv);
+          });
+        }
+        if (expr.startsWith('list(')) {
+          var inner = expr.slice(5, -1);
+          var val = evalExpr(inner, localVars);
+          if (Array.isArray(val)) return val;
+          return [];
+        }
+        if (expr.startsWith('set(')) {
+          var inner = expr.slice(4, -1);
+          var val = evalExpr(inner, localVars);
+          if (Array.isArray(val)) {
+            var unique = [];
+            val.forEach(function(v) { if (unique.indexOf(v) === -1) unique.push(v); });
+            return unique.sort(function(a,b){return a-b;});
+          }
+        }
+        var sortedMatch = expr.match(/^sorted\((.+?)(?:,\s*key=(\w+))?\)$/);
+        if (sortedMatch) {
+          var val = evalExpr(sortedMatch[1], localVars);
+          if (Array.isArray(val)) {
+            var arr = val.slice();
+            if (sortedMatch[2] === 'len') {
+              arr.sort(function(a,b) { return (typeof a === 'string' ? a.length : a) - (typeof b === 'string' ? b.length : b); });
+            } else {
+              arr.sort(function(a,b) { return a < b ? -1 : a > b ? 1 : 0; });
+            }
+            return arr;
+          }
+        }
+        var rangeMatch = expr.match(/^range\((\d+)(?:,\s*(\d+))?(?:,\s*(\d+))?\)$/);
+        if (rangeMatch) {
+          var start = rangeMatch[2] ? parseInt(rangeMatch[1]) : 0;
+          var end = rangeMatch[2] ? parseInt(rangeMatch[2]) : parseInt(rangeMatch[1]);
+          var step = rangeMatch[3] ? parseInt(rangeMatch[3]) : 1;
+          var result = [];
+          for (var i = start; step > 0 ? i < end : i > end; i += step) result.push(i);
+          return result;
+        }
+
+        // Dict literal
+        if (expr.startsWith('{') && expr.endsWith('}')) {
+          try { return JSON.parse(expr); } catch(e) { return expr; }
+        }
+        // Tuple
+        if (expr.startsWith('(') && expr.endsWith(')') && expr.includes(',')) {
+          var inner = expr.slice(1,-1);
+          var parts = [];
+          var depth = 0; var current = '';
+          for (var ci = 0; ci < inner.length; ci++) {
+            var ch = inner[ci];
+            if (ch === '(' || ch === '[' || ch === '{') depth++;
+            if (ch === ')' || ch === ']' || ch === '}') depth--;
+            if (ch === ',' && depth === 0) { parts.push(evalExpr(current.trim(), localVars)); current = ''; }
+            else current += ch;
+          }
+          if (current.trim()) parts.push(evalExpr(current.trim(), localVars));
+          return parts;
+        }
+        return expr;
+      }
+
+      function evaluateIterable(expr, localVars) {
+        expr = expr.trim();
+        var rangeMatch = expr.match(/^range\((\d+)(?:,\s*(\d+))?(?:,\s*(\d+))?\)$/);
+        if (rangeMatch) {
+          var start = rangeMatch[2] ? parseInt(rangeMatch[1]) : 0;
+          var end = rangeMatch[2] ? parseInt(rangeMatch[2]) : parseInt(rangeMatch[1]);
+          var step = rangeMatch[3] ? parseInt(rangeMatch[3]) : 1;
+          var result = [];
+          for (var i = start; step > 0 ? i < end : i > end; i += step) result.push(i);
+          return result;
+        }
+        var val = evalExpr(expr, localVars);
+        if (Array.isArray(val)) return val;
+        if (typeof val === 'string') return val.split('');
+        return [];
+      }
+
+      function parseArgs(argsStr, localVars) {
+        if (!argsStr || !argsStr.trim()) return [];
+        var args = [];
+        var depth = 0;
+        var current = '';
+        for (var i = 0; i < argsStr.length; i++) {
+          var ch = argsStr[i];
+          if (ch === '(' || ch === '[' || ch === '{') depth++;
+          if (ch === ')' || ch === ']' || ch === '}') depth--;
+          if (ch === ',' && depth === 0) {
+            args.push(evalExpr(current.trim(), localVars));
+            current = '';
+          } else {
+            current += ch;
+          }
+        }
+        if (current.trim()) args.push(evalExpr(current.trim(), localVars));
+        return args;
+      }
+
+      function evalCondition(expr, localVars) {
+        expr = expr.trim();
+        if (expr.includes(' and ')) {
+          var parts = expr.split(' and ');
+          for (var i = 0; i < parts.length; i++) {
+            if (!evalCondition(parts[i].trim(), localVars)) return false;
+          }
+          return true;
+        }
+        if (expr.includes(' or ')) {
+          var parts = expr.split(' or ');
+          for (var i = 0; i < parts.length; i++) {
+            if (evalCondition(parts[i].trim(), localVars)) return true;
+          }
+          return false;
+        }
+        if (expr.startsWith('not ')) return !evalCondition(expr.slice(4), localVars);
+
+        var compMatch = expr.match(/^(.+?)\s*(==|!=|>=|<=|>|<| in | is not | is )\s*(.+)$/);
+        if (compMatch) {
+          var lVal = evalExpr(compMatch[1], localVars);
+          var op = compMatch[2].trim();
+          var rVal = evalExpr(compMatch[3], localVars);
+          switch(op) {
+            case '==': return lVal == rVal;
+            case '!=': return lVal != rVal;
+            case '>': return lVal > rVal;
+            case '<': return lVal < rVal;
+            case '>=': return lVal >= rVal;
+            case '<=': return lVal <= rVal;
+            case 'in': return Array.isArray(rVal) ? rVal.includes(lVal) : (typeof rVal === 'string' ? rVal.includes(String(lVal)) : false);
+            case 'is': return lVal === rVal;
+            case 'is not': return lVal !== rVal;
+          }
+        }
+        return Boolean(evalExpr(expr, localVars));
+      }
+
+      function getIndent(line) {
+        var match = line.match(/^(\s*)/);
+        return match ? match[1].length : 0;
+      }
+
+      function executeBlock(blockLines, localVars) {
+        if (!localVars) localVars = {};
+        var i = 0;
+        while (i < blockLines.length) {
+          var line = blockLines[i].trim();
+          if (!line || line.startsWith('#') || line.startsWith('"""') || line.startsWith("'''")) { i++; continue; }
+
+          // Print
+          var printMatch = line.match(/^print\((.+)\)$/);
+          if (printMatch) {
+            var argsStr = printMatch[1];
+            var endChar = '\n';
+            var endMatch = argsStr.match(/,\s*end\s*=\s*["'](.?)["']\s*$/);
+            if (endMatch) {
+              endChar = endMatch[1];
+              argsStr = argsStr.replace(/,\s*end\s*=\s*["'].?["']\s*$/, '');
+            }
+            var args = parseArgs(argsStr, localVars);
+            var text = args.map(function(a) { return formatValue(a); }).join(' ');
+            if (endChar === '\n') {
+              output.push(text);
+            } else {
+              if (output.length === 0) output.push('');
+              output[output.length - 1] += text + endChar;
+            }
+            i++; continue;
+          }
+
+          // Variable assignment
+          var assignMatch = line.match(/^(\w+(?:\s*,\s*\w+)*)\s*=\s*(.+)$/);
+          if (assignMatch && !line.startsWith('if ') && !line.startsWith('for ') && !line.startsWith('while ') && !line.startsWith('def ') && !line.startsWith('class ')) {
+            var varPart = assignMatch[1];
+            var exprPart = assignMatch[2];
+            if (varPart.includes(',')) {
+              var vars = varPart.split(',').map(function(v) { return v.trim(); });
+              var vals;
+              if (exprPart.includes(',') && !exprPart.startsWith('[') && !exprPart.startsWith('(') && !exprPart.startsWith('{')) {
+                vals = exprPart.split(',').map(function(p) { return evalExpr(p.trim(), localVars); });
+              } else {
+                var val = evalExpr(exprPart, localVars);
+                vals = Array.isArray(val) ? val : [val];
+              }
+              for (var vi = 0; vi < vars.length; vi++) {
+                localVars[vars[vi]] = vals[vi];
+                variables[vars[vi]] = vals[vi];
+              }
+            } else {
+              var val = evalExpr(exprPart, localVars);
+              localVars[varPart] = val;
+              variables[varPart] = val;
+            }
+            i++; continue;
+          }
+
+          // Dict assignment
+          var dictAssign = line.match(/^(\w+)\[([^\]]+)\]\s*=\s*(.+)$/);
+          if (dictAssign) {
+            var obj = localVars[dictAssign[1]] !== undefined ? localVars[dictAssign[1]] : variables[dictAssign[1]];
+            var key = evalExpr(dictAssign[2], localVars);
+            var val = evalExpr(dictAssign[3], localVars);
+            if (obj && typeof obj === 'object') obj[key] = val;
+            i++; continue;
+          }
+
+          // Augmented assignment
+          var augAssign = line.match(/^(\w+)\s*(\+|-|\*|\/|\/\/|%)=\s*(.+)$/);
+          if (augAssign) {
+            var varName = augAssign[1];
+            var op = augAssign[2];
+            var expr = augAssign[3];
+            var current = localVars[varName] !== undefined ? localVars[varName] : variables[varName];
+            var val = evalExpr(expr, localVars);
+            var result;
+            switch(op) {
+              case '+': result = typeof current === 'string' ? current + val : current + val; break;
+              case '-': result = current - val; break;
+              case '*': result = current * val; break;
+              case '/': result = current / val; break;
+              case '//': result = Math.floor(current / val); break;
+              case '%': result = current % val; break;
+            }
+            localVars[varName] = result;
+            variables[varName] = result;
+            i++; continue;
+          }
+
+          // If/elif/else
+          if (line.startsWith('if ') || line.startsWith('elif ') || line === 'else:' || line.startsWith('else:')) {
+            var condition = true;
+            if (line.startsWith('if ') || line.startsWith('elif ')) {
+              var condExpr = line.replace(/^(if|elif)\s+/, '').replace(/:$/, '');
+              condition = evalCondition(condExpr, localVars);
+            }
+            var baseIndent = getIndent(blockLines[i]);
+            var block = [];
+            i++;
+            while (i < blockLines.length) {
+              var nextLine = blockLines[i];
+              if (nextLine.trim() === '' || nextLine.trim().startsWith('#')) { i++; continue; }
+              var nextIndent = getIndent(nextLine);
+              if (nextIndent > baseIndent) { block.push(nextLine); i++; }
+              else break;
+            }
+            if (condition) {
+              executeBlock(block, localVars);
+              while (i < blockLines.length) {
+                var nextLine = blockLines[i].trim();
+                if (nextLine.startsWith('elif ') || nextLine.startsWith('else')) {
+                  var bi = getIndent(blockLines[i]);
+                  i++;
+                  while (i < blockLines.length && getIndent(blockLines[i]) > bi) i++;
+                } else break;
+              }
+              continue;
+            } else {
+              continue;
+            }
+          }
+
+          // For loop
+          var forMatch = line.match(/^for\s+(.+)\s+in\s+(.+):$/);
+          if (forMatch) {
+            var loopVars = forMatch[1];
+            var iterExpr = forMatch[2];
+            var items = evaluateIterable(iterExpr, localVars);
+            var vars = loopVars.split(',').map(function(v) { return v.trim(); });
+            var baseIndent = getIndent(blockLines[i]);
+            var block = [];
+            i++;
+            while (i < blockLines.length) {
+              var nextLine = blockLines[i];
+              if (nextLine.trim() === '') { i++; continue; }
+              var nextIndent = getIndent(nextLine);
+              if (nextIndent > baseIndent) { block.push(nextLine); i++; }
+              else break;
+            }
+            for (var ii = 0; ii < items.length; ii++) {
+              var item = items[ii];
+              var loopLocal = {};
+              for (var k in localVars) loopLocal[k] = localVars[k];
+              if (vars.length === 1) {
+                loopLocal[vars[0]] = item;
+              } else if (Array.isArray(item)) {
+                for (var vi = 0; vi < vars.length; vi++) loopLocal[vars[vi]] = item[vi];
+              } else {
+                loopLocal[vars[0]] = item;
+              }
+              executeBlock(block, loopLocal);
+            }
+            continue;
+          }
+
+          // While loop
+          var whileMatch = line.match(/^while\s+(.+):$/);
+          if (whileMatch) {
+            var condExpr = whileMatch[1];
+            var baseIndent = getIndent(blockLines[i]);
+            var block = [];
+            i++;
+            while (i < blockLines.length) {
+              var nextLine = blockLines[i];
+              if (nextLine.trim() === '') { i++; continue; }
+              var nextIndent = getIndent(nextLine);
+              if (nextIndent > baseIndent) { block.push(nextLine); i++; }
+              else break;
+            }
+            var maxIter = 1000;
+            while (evalCondition(condExpr, localVars) && maxIter-- > 0) {
+              executeBlock(block, localVars);
+            }
+            continue;
+          }
+
+          // Function definition
+          var defMatch = line.match(/^def\s+(\w+)\s*\(([^)]*)\)\s*:$/);
+          if (defMatch) {
+            var funcName = defMatch[1];
+            var paramsStr = defMatch[2];
+            var params = [];
+            var defaults = {};
+            if (paramsStr.trim()) {
+              var paramParts = paramsStr.split(',');
+              for (var pi = 0; pi < paramParts.length; pi++) {
+                var pp = paramParts[pi].trim();
+                if (pp.includes('=')) {
+                  var eqParts = pp.split('=');
+                  params.push(eqParts[0].trim());
+                  defaults[eqParts[0].trim()] = evalExpr(eqParts[1].trim(), localVars);
+                } else if (pp.startsWith('*')) {
+                  params.push(pp);
+                } else {
+                  params.push(pp);
+                }
+              }
+            }
+            var baseIndent = getIndent(blockLines[i]);
+            var body = [];
+            i++;
+            while (i < blockLines.length) {
+              var nextLine = blockLines[i];
+              if (nextLine.trim() === '') { i++; continue; }
+              var nextIndent = getIndent(nextLine);
+              if (nextIndent > baseIndent) { body.push(nextLine); i++; }
+              else break;
+            }
+            functions[funcName] = { params: params, defaults: defaults, body: body };
+            continue;
+          }
+
+          // Class definition
+          var classMatch = line.match(/^class\s+(\w+)(?:\((\w+)\))?\s*:$/);
+          if (classMatch) {
+            var className = classMatch[1];
+            var parent = classMatch[2];
+            var baseIndent = getIndent(blockLines[i]);
+            var body = [];
+            i++;
+            while (i < blockLines.length) {
+              var nextLine = blockLines[i];
+              if (nextLine.trim() === '') { i++; continue; }
+              var nextIndent = getIndent(nextLine);
+              if (nextIndent > baseIndent) { body.push(nextLine); i++; }
+              else break;
+            }
+            var cls = { parent: parent, methods: {}, classAttrs: {} };
+            for (var j = 0; j < body.length; j++) {
+              var mLine = body[j].trim();
+              var mDef = mLine.match(/^def\s+(\w+)\s*\(([^)]*)\)\s*:$/);
+              if (mDef) {
+                var mName = mDef[1];
+                var mParams = mDef[2].split(',').map(function(p) { return p.trim(); }).filter(Boolean);
+                var mBaseIndent = getIndent(body[j]);
+                var mBody = [];
+                j++;
+                while (j < body.length) {
+                  var nextLine = body[j];
+                  if (nextLine.trim() === '') { j++; continue; }
+                  var nextIndent = getIndent(nextLine);
+                  if (nextIndent > mBaseIndent) { mBody.push(nextLine); j++; }
+                  else { j--; break; }
+                }
+                cls.methods[mName] = { params: mParams, body: mBody };
+              } else if (mLine.includes('=') && !mLine.startsWith('def') && !mLine.startsWith('#') && !mLine.startsWith('"""')) {
+                var attrMatch = mLine.match(/^(\w+)\s*=\s*(.+)$/);
+                if (attrMatch) cls.classAttrs[attrMatch[1]] = evalExpr(attrMatch[2]);
+              }
+            }
+            classes[className] = cls;
+            continue;
+          }
+
+          // Object instantiation
+          var instMatch = line.match(/^(\w+)\s*=\s*(\w+)\((.+)\)$/);
+          if (instMatch && classes[instMatch[2]]) {
+            var varName = instMatch[1];
+            var className = instMatch[2];
+            var argsStr = instMatch[3];
+            var cls = classes[className];
+            var args = parseArgs(argsStr, localVars);
+            var obj = { __class__: className };
+            for (var k in cls.classAttrs) obj[k] = cls.classAttrs[k];
+            if (cls.methods['__init__']) {
+              var init = cls.methods['__init__'];
+              var initLocals = { self: obj };
+              for (var pi = 1; pi < init.params.length; pi++) {
+                initLocals[init.params[pi]] = args[pi - 1];
+              }
+              executeBlock(init.body, initLocals);
+              obj = initLocals.self;
+            }
+            localVars[varName] = obj;
+            variables[varName] = obj;
+            i++; continue;
+          }
+
+          // Method call on object
+          var methodCallMatch = line.match(/^(\w+)\.(\w+)\((.*)?\)$/);
+          if (methodCallMatch && !functions[methodCallMatch[1]]) {
+            var objName = methodCallMatch[1];
+            var method = methodCallMatch[2];
+            var argsStr = methodCallMatch[3] || '';
+            var obj = localVars[objName] !== undefined ? localVars[objName] : variables[objName];
+            if (obj && obj.__class__ && classes[obj.__class__]) {
+              var cls = classes[obj.__class__];
+              if (cls.methods[method]) {
+                var m = cls.methods[method];
+                var args = argsStr ? parseArgs(argsStr, localVars) : [];
+                var mLocals = { self: obj };
+                for (var pi = 1; pi < m.params.length; pi++) {
+                  mLocals[m.params[pi]] = args[pi - 1];
+                }
+                executeBlock(m.body, mLocals);
+                if (localVars[objName] !== undefined) localVars[objName] = mLocals.self;
+                else variables[objName] = mLocals.self;
+              }
+            }
+            i++; continue;
+          }
+
+          // Standalone function call
+          var funcCallMatch = line.match(/^(\w+)\((.*)?\)$/);
+          if (funcCallMatch && functions[funcCallMatch[1]]) {
+            evalExpr(line, localVars);
+            i++; continue;
+          }
+
+          // Try-except
+          if (line === 'try:') {
+            var baseIndent = getIndent(blockLines[i]);
+            var tryBlock = [];
+            i++;
+            while (i < blockLines.length) {
+              var nextLine = blockLines[i];
+              if (nextLine.trim() === '') { i++; continue; }
+              var nextIndent = getIndent(nextLine);
+              if (nextIndent > baseIndent) { tryBlock.push(nextLine); i++; }
+              else break;
+            }
+            var exceptBlocks = [];
+            while (i < blockLines.length && blockLines[i].trim().startsWith('except')) {
+              var exceptLine = blockLines[i].trim();
+              var exceptType = (exceptLine.match(/^except\s+(\w+)/) || [,'Exception'])[1];
+              var eIndent = getIndent(blockLines[i]);
+              var eBlock = [];
+              i++;
+              while (i < blockLines.length) {
+                var nextLine = blockLines[i];
+                if (nextLine.trim() === '') { i++; continue; }
+                var nextIndent = getIndent(nextLine);
+                if (nextIndent > eIndent) { eBlock.push(nextLine); i++; }
+                else break;
+              }
+              exceptBlocks.push({ type: exceptType, body: eBlock });
+            }
+            // Skip finally
+            if (i < blockLines.length && blockLines[i].trim().startsWith('finally')) {
+              var fIndent = getIndent(blockLines[i]);
+              i++;
+              while (i < blockLines.length) {
+                var nextLine = blockLines[i];
+                if (nextLine.trim() === '') { i++; continue; }
+                if (getIndent(nextLine) > fIndent) i++;
+                else break;
+              }
+            }
+            try {
+              executeBlock(tryBlock, localVars);
+            } catch(e) {
+              for (var ei = 0; ei < exceptBlocks.length; ei++) {
+                var eb = exceptBlocks[ei];
+                if (eb.type === 'Exception' || e.message && e.message.includes(eb.type)) {
+                  executeBlock(eb.body, localVars);
+                  break;
+                }
+              }
+            }
+            continue;
+          }
+
+          // Return
+          if (line.startsWith('return')) {
+            var retVal = line === 'return' ? null : evalExpr(line.replace(/^return\s*/, ''), localVars);
+            return retVal;
+          }
+
+          // Raise
+          if (line.startsWith('raise ')) {
+            var errMatch = line.match(/^raise\s+(\w+)\((.+)\)$/);
+            if (errMatch) {
+              throw { name: errMatch[1], message: evalExpr(errMatch[2], localVars) };
+            }
+            throw new Error(line);
+          }
+
+          i++;
+        }
+      }
+
+      function formatValue(val) {
+        if (val === null || val === undefined) return 'None';
+        if (val === true) return 'True';
+        if (val === false) return 'False';
+        if (Array.isArray(val)) return '[' + val.map(formatValue).join(', ') + ']';
+        if (typeof val === 'object') return JSON.stringify(val);
+        return String(val);
+      }
+
+      try {
+        executeBlock(lines, {});
+      } catch(e) {
+        if (e.name && e.message) {
+          output.push(e.name + ': ' + e.message);
+        } else {
+          output.push('Error: ' + (e.message || String(e)));
+        }
+      }
+
+      return output.join('\n').replace(/\n+$/, '');
+    }
+
+    // ==================== RENDER ====================
+    function render() {
+      renderSidebar();
+      renderMainContent();
+      renderProgress();
+    }
+
+    function renderProgress() {
+      var total = getTotalLessons();
+      var completed = state.completedLessons.size;
+      var pct = total > 0 ? Math.round((completed / total) * 100) : 0;
+      var html = '<div class="progress-labels"><span>Прогресс курса</span><span>' + completed + '/' + total + ' уроков (' + pct + '%)</span></div>' +
+        '<div class="progress-bar"><div class="progress-fill" style="width:' + pct + '%"></div></div>';
+      document.getElementById('headerProgress').innerHTML = html;
+      document.getElementById('mobileProgress').innerHTML = html;
+      document.getElementById('headerBadge').textContent = '⭐ ' + completed + ' / ' + total;
+      document.getElementById('footerText').textContent = 'Бесплатный интерактивный курс Python • ' + total + ' уроков • ' + courseData.length + ' разделов';
+    }
+
+    function renderSidebar() {
+      var sidebar = document.getElementById('sidebar');
+      var html = '<nav>';
+      courseData.forEach(function(section, sIdx) {
+        var isActive = sIdx === state.activeSection;
+        var completedCount = section.lessons.filter(function(l) { return state.completedLessons.has(l.id); }).length;
+        html += '<div class="sidebar-section">' +
+          '<button class="sidebar-section-btn ' + (isActive ? 'active' : '') + '" onclick="selectSection(' + sIdx + ')">' +
+            '<span class="sidebar-section-icon">' + section.icon + '</span>' +
+            '<span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + section.title + '</span>' +
+            '<span class="sidebar-section-count">' + completedCount + '/' + section.lessons.length + '</span>' +
+          '</button>';
+        if (isActive) {
+          html += '<div class="sidebar-lessons">';
+          section.lessons.forEach(function(lesson, lIdx) {
+            var isLessonActive = lIdx === state.activeLesson;
+            var isCompleted = state.completedLessons.has(lesson.id);
+            html += '<button class="sidebar-lesson-btn ' + (isLessonActive ? 'active' : '') + '" onclick="selectLesson(' + sIdx + ',' + lIdx + ')">' +
+              '<span class="lesson-indicator ' + (isCompleted ? 'completed' : '') + ' ' + (isLessonActive ? 'current' : '') + '">' + (isCompleted ? '✓' : (lIdx + 1)) + '</span>' +
+              '<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + lesson.title + '</span>' +
+            '</button>';
+          });
+          html += '</div>';
+        }
+        html += '</div>';
+      });
+      html += '</nav>';
+      sidebar.innerHTML = html;
+    }
+
+    function renderMainContent() {
+      var section = courseData[state.activeSection];
+      var lesson = section.lessons[state.activeLesson];
+      var exercise = lesson.exercises[state.activeExercise];
+      var isCompleted = state.completedLessons.has(lesson.id);
+
+      if (!state.editorCode || state._lastKey !== state.activeSection + '-' + state.activeLesson + '-' + state.activeExercise) {
+        state.editorCode = exercise.starterCode;
+        state._lastKey = state.activeSection + '-' + state.activeLesson + '-' + state.activeExercise;
+        state.showSolution = false;
+        state.showHint = false;
+        state.testResults = null;
+      }
+
+      var html = '';
+      html += '<div class="breadcrumb"><span>' + section.icon + ' ' + section.title + '</span><span>/</span><span class="breadcrumb-current">' + lesson.title + '</span></div>';
+      html += '<h2 class="lesson-title">' + lesson.title + '</h2>';
+      if (isCompleted) html += '<div class="lesson-complete-badge">✅ Завершено</div>';
+
+      html += '<div class="theory-block"><div class="theory-title">📖 Теория</div><div class="theory-content">' + renderTheory(lesson.theory) + '</div></div>';
+
+      html += '<div class="examples-section"><div class="examples-title">💡 Примеры</div>';
+      lesson.examples.forEach(function(ex) {
+        html += '<div class="example-item"><div class="example-title">' + ex.title + '</div>' + renderCodeBlock(ex.code) + '<div class="example-explanation">' + ex.explanation + '</div></div>';
+      });
+      html += '</div>';
+
+      if (lesson.exercises.length > 0) {
+        html += '<div class="exercises-section"><div class="exercises-title">🎯 Задания <span class="exercise-counter">(' + (state.activeExercise + 1) + ' из ' + lesson.exercises.length + ')</span></div>';
+        html += '<div class="exercise-block">';
+        html += '<div class="exercise-name">' + exercise.title + '</div>';
+        html += '<div class="exercise-desc">' + exercise.description + '</div>';
+        if (lesson.exercises.length > 1) {
+          html += '<div style="display:flex;gap:8px;margin-bottom:16px;">';
+          lesson.exercises.forEach(function(_, i) {
+            html += '<button class="btn ' + (i === state.activeExercise ? 'btn-run' : 'btn-nav') + '" onclick="selectExercise(' + i + ')" style="padding:4px 12px;font-size:12px;">Задание ' + (i + 1) + '</button>';
+          });
+          html += '</div>';
+        }
+        html += '<div class="editor-wrapper"><div class="editor-header">🐍 Редактор Python</div>';
+        html += '<textarea class="editor-textarea" id="codeEditor" spellcheck="false" placeholder="# Напишите ваш код здесь..." oninput="state.editorCode=this.value">' + escapeHtml(state.editorCode) + '</textarea></div>';
+        html += '<div class="btn-group">';
+        html += '<button class="btn btn-run" onclick="runCode()">▶ Запустить</button>';
+        html += '<button class="btn btn-hint" onclick="toggleHint()">💡 Подсказка</button>';
+        html += '<button class="btn btn-solution" onclick="toggleSolution()">👁 Решение</button>';
+        html += '</div>';
+        if (state.showHint) html += '<div class="hint-block">💡 ' + exercise.hint + '</div>';
+        if (state.showSolution) html += '<div class="solution-block"><div class="solution-label">Решение:</div>' + renderCodeBlock(exercise.solution) + '</div>';
+        if (state.testResults) {
+          html += '<div class="test-results"><div class="test-results-title">Результаты тестов:</div>';
+          state.testResults.forEach(function(r) {
+            html += '<div class="test-result-item ' + (r.passed ? 'test-pass' : 'test-fail') + '">' + escapeHtml(r.output) + '</div>';
+          });
+          if (state.testResults.every(function(r) { return r.passed; })) {
+            html += '<div class="test-success">🎉 Отлично! Все тесты пройдены!</div>';
+          }
+          html += '</div>';
+        }
+        html += '</div></div>';
+      }
+
+      var isFirst = state.activeSection === 0 && state.activeLesson === 0 && state.activeExercise === 0;
+      var isLast = state.activeSection === courseData.length - 1 && state.activeLesson === section.lessons.length - 1 && state.activeExercise === lesson.exercises.length - 1;
+      html += '<div class="nav-bar">';
+      html += '<button class="btn btn-nav" onclick="goPrev()" ' + (isFirst ? 'disabled' : '') + '>← Назад</button>';
+      html += '<button class="btn btn-complete ' + (isCompleted ? 'done' : '') + '" onclick="markComplete()">' + (isCompleted ? '✅ Завершено' : 'Отметить как пройденное') + '</button>';
+      html += '<button class="btn btn-nav" onclick="goNext()" ' + (isLast ? 'disabled' : '') + '>Далее →</button>';
+      html += '</div>';
+
+      document.getElementById('mainContent').innerHTML = html;
+    }
+
+    // ==================== ACTIONS ====================
+    function selectSection(idx) {
+      state.activeSection = idx;
+      state.activeLesson = 0;
+      state.activeExercise = 0;
+      state._lastKey = '';
+      render();
+    }
+
+    function selectLesson(sIdx, lIdx) {
+      state.activeSection = sIdx;
+      state.activeLesson = lIdx;
+      state.activeExercise = 0;
+      state._lastKey = '';
+      state.sidebarOpen = false;
+      document.getElementById('sidebar').classList.remove('open');
+      document.getElementById('sidebarOverlay').classList.remove('open');
+      render();
+      window.scrollTo(0, 0);
+    }
+
+    function selectExercise(idx) {
+      state.activeExercise = idx;
+      state._lastKey = '';
+      render();
+    }
+
+    function toggleSidebar() {
+      state.sidebarOpen = !state.sidebarOpen;
+      document.getElementById('sidebar').classList.toggle('open', state.sidebarOpen);
+      document.getElementById('sidebarOverlay').classList.toggle('open', state.sidebarOpen);
+    }
+
+    function toggleHint() {
+      state.showHint = !state.showHint;
+      render();
+    }
+
+    function toggleSolution() {
+      state.showSolution = !state.showSolution;
+      render();
+    }
+
+    function runCode() {
+      var lesson = courseData[state.activeSection].lessons[state.activeLesson];
+      var exercise = lesson.exercises[state.activeExercise];
+      var userOutput = simulatePython(state.editorCode);
+      var results = exercise.tests.map(function(test) {
+        var passed = userOutput.trim() === test.expected.trim();
+        return {
+          passed: passed,
+          output: passed ? '✅ Верно! Вывод: ' + userOutput : '❌ Ожидание: "' + test.expected + '"\n   Получено: "' + (userOutput || '(пусто)') + '"'
+        };
+      });
+      state.testResults = results;
+      if (results.every(function(r) { return r.passed; })) markComplete();
+      render();
+    }
+
+    function markComplete() {
+      var lesson = courseData[state.activeSection].lessons[state.activeLesson];
+      state.completedLessons.add(lesson.id);
+      saveProgress();
+      render();
+    }
+
+    function goNext() {
+      var section = courseData[state.activeSection];
+      var lesson = section.lessons[state.activeLesson];
+      if (state.activeExercise < lesson.exercises.length - 1) {
+        state.activeExercise++;
+      } else if (state.activeLesson < section.lessons.length - 1) {
+        state.activeLesson++;
+        state.activeExercise = 0;
+      } else if (state.activeSection < courseData.length - 1) {
+        state.activeSection++;
+        state.activeLesson = 0;
+        state.activeExercise = 0;
+      }
+      state._lastKey = '';
+      render();
+      window.scrollTo(0, 0);
+    }
+
+    function goPrev() {
+      if (state.activeExercise > 0) {
+        state.activeExercise--;
+      } else if (state.activeLesson > 0) {
+        state.activeLesson--;
+        state.activeExercise = courseData[state.activeSection].lessons[state.activeLesson].exercises.length - 1;
+      } else if (state.activeSection > 0) {
+        state.activeSection--;
+        var prevSection = courseData[state.activeSection];
+        state.activeLesson = prevSection.lessons.length - 1;
+        state.activeExercise = prevSection.lessons[state.activeLesson].exercises.length - 1;
+      }
+      state._lastKey = '';
+      render();
+      window.scrollTo(0, 0);
+    }
+
+    // ==================== INIT ====================
+    render();
+  </script>
+</body>
+</html>

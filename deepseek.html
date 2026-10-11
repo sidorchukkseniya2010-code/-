@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PyCamp — интерактивный курс Python</title>
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        body {
+            background: #f8fafc;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 16px;
+        }
+
+        .app {
+            max-width: 1400px;
+            width: 100%;
+            background: white;
+            border-radius: 32px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border: 1px solid #e2e8f0;
+        }
+
+        /* Header */
+        .header {
+            background: #0a0f1e;
+            padding: 16px 28px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: white;
+            border-bottom: 1px solid #1e293b;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 700;
+            font-size: 1.6rem;
+            letter-spacing: -0.5px;
+        }
+
+        .logo i {
+            color: #facc15;
+            font-size: 2rem;
+        }
+
+        .logo span {
+            color: #facc15;
+        }
+
+        .progress-badge {
+            background: #1e293b;
+            padding: 8px 18px;
+            border-radius: 100px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 500;
+            font-size: 0.95rem;
+            border: 1px solid #334155;
+        }
+
+        .progress-badge i {
+            color: #facc15;
+        }
+
+        .progress-bar {
+            width: 200px;
+            height: 8px;
+            background: #334155;
+            border-radius: 100px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            width: 0%;
+            background: #facc15;
+            border-radius: 100px;
+            transition: width 0.3s ease;
+        }
+
+        /* Main layout */
+        .main {
+            display: flex;
+            flex: 1;
+            min-height: 600px;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 300px;
+            background: #ffffff;
+            border-right: 1px solid #e2e8f0;
+            padding: 24px 16px;
+            overflow-y: auto;
+            max-height: 700px;
+        }
+
+        .sidebar h3 {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #64748b;
+            margin-bottom: 16px;
+            padding-left: 8px;
+            font-weight: 600;
+        }
+
+        .lesson-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .lesson-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            border-radius: 12px;
+            background: #f1f5f9;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            border-left: 4px solid transparent;
+            color: #0f172a;
+            font-weight: 500;
+            font-size: 0.95rem;
+        }
+
+        .lesson-item i {
+            width: 20px;
+            color: #64748b;
+            font-size: 1rem;
+        }
+
+        .lesson-item:hover {
+            background: #e2e8f0;
+        }
+
+        .lesson-item.active {
+            background: #0a0f1e;
+            color: white;
+            border-left-color: #facc15;
+        }
+
+        .lesson-item.active i {
+            color: #facc15;
+        }
+
+        .lesson-item.completed i.fa-check-circle {
+            color: #22c55e;
+        }
+
+        .lesson-item.completed {
+            opacity: 0.8;
+        }
+
+        /* Content area */
+        .content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 32px 40px;
+            overflow-y: auto;
+            max-height: 700px;
+            background: #ffffff;
+        }
+
+        .lesson-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 28px;
+        }
+
+        .lesson-header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            color: #0a0f1e;
+        }
+
+        .lesson-header .badge {
+            background: #facc15;
+            color: #0a0f1e;
+            padding: 6px 14px;
+            border-radius: 100px;
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+
+        .theory {
+            background: #f8fafc;
+            padding: 24px;
+            border-radius: 20px;
+            border-left: 6px solid #facc15;
+            margin-bottom: 28px;
+            line-height: 1.7;
+            color: #1e293b;
+            font-size: 1.05rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+        }
+
+        .theory code {
+            background: #e2e8f0;
+            padding: 2px 8px;
+            border-radius: 8px;
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            font-size: 0.95rem;
+        }
+
+        .theory pre {
+            background: #0a0f1e;
+            color: #e2e8f0;
+            padding: 16px;
+            border-radius: 14px;
+            overflow-x: auto;
+            margin: 16px 0;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.95rem;
+        }
+
+        .task {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 20px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+        }
+
+        .task h3 {
+            font-size: 1.2rem;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #0a0f1e;
+        }
+
+        .task h3 i {
+            color: #facc15;
+        }
+
+        .editor-container {
+            background: #0a0f1e;
+            border-radius: 16px;
+            overflow: hidden;
+            margin: 16px 0;
+        }
+
+        .editor-header {
+            background: #1e293b;
+            padding: 10px 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #94a3b8;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .editor-header i {
+            color: #facc15;
+        }
+
+        textarea.code-editor {
+            width: 100%;
+            min-height: 180px;
+            background: #0a0f1e;
+            color: #e2e8f0;
+            border: none;
+            padding: 18px;
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            font-size: 1rem;
+            line-height: 1.6;
+            resize: vertical;
+            outline: none;
+            border-bottom: 1px solid #1e293b;
+        }
+
+        .editor-actions {
+            display: flex;
+            gap: 12px;
+            padding: 14px 18px;
+            background: #0f172a;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            border: none;
+            padding: 10px 22px;
+            border-radius: 100px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            background: #334155;
+            color: white;
+        }
+
+        .btn-primary {
+            background: #facc15;
+            color: #0a0f1e;
+        }
+
+        .btn-primary:hover {
+            background: #eab308;
+            transform: translateY(-1px);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid #475569;
+            color: #cbd5e1;
+        }
+
+        .btn-outline:hover {
+            background: #1e293b;
+            border-color: #64748b;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .output {
+            background: #f1f5f9;
+            border-radius: 14px;
+            padding: 16px 20px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.95rem;
+            white-space: pre-wrap;
+            word-break: break-word;
+            min-height: 60px;
+            border-left: 4px solid #facc15;
+            color: #0f172a;
+            margin-top: 16px;
+        }
+
+        .output.success {
+            border-left-color: #22c55e;
+            background: #f0fdf4;
+            color: #166534;
+        }
+
+        .output.error {
+            border-left-color: #ef4444;
+            background: #fef2f2;
+            color: #991b1b;
+        }
+
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 28px;
+            gap: 16px;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .completion-message {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            color: #166534;
+            padding: 16px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 20px;
+            font-weight: 500;
+        }
+
+        .completion-message i {
+            color: #22c55e;
+            font-size: 1.4rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            .main {
+                flex-direction: column;
+            }
+            .sidebar {
+                width: 100%;
+                max-height: 200px;
+                border-right: none;
+                border-bottom: 1px solid #e2e8f0;
+            }
+            .content {
+                padding: 24px 20px;
+                max-height: none;
+            }
+            .header {
+                flex-direction: column;
+                gap: 12px;
+                align-items: flex-start;
+            }
+            .progress-bar {
+                width: 120px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="app">
+    <!-- Header -->
+    <header class="header">
+        <div class="logo">
+            <i class="fa-brands fa-python"></i>
+            Py<span>Camp</span>
+        </div>
+        <div class="progress-badge">
+            <i class="fa-solid fa-graduation-cap"></i>
+            <span id="progressText">0 / 5 уроков</span>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill" style="width: 0%;"></div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main -->
+    <div class="main">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <h3><i class="fa-solid fa-list-check" style="margin-right: 8px;"></i> Модули</h3>
+            <div class="lesson-list" id="lessonList">
+                <!-- динамически заполняется -->
+            </div>
+        </aside>
+
+        <!-- Content -->
+        <section class="content" id="contentArea">
+            <!-- динамический контент -->
+        </section>
+    </div>
+</div>
+
+<script>
+    // ========== ДАННЫЕ КУРСА ==========
+    const lessons = [
+        {
+            id: 0,
+            title: "Введение в Python",
+            icon: "fa-solid fa-play",
+            theory: `
+                <p><strong>Python</strong> — это высокоуровневый язык программирования с динамической типизацией. Он прост в изучении и мощный.</p>
+                <p>Основы синтаксиса:</p>
+                <pre>print("Привет, мир!")</pre>
+                <p>Переменные создаются присваиванием:</p>
+                <pre>name = "Анна"\nage = 25</pre>
+                <p>Python чувствителен к регистру и использует отступы для блоков кода.</p>
+            `,
+            task: `Напишите программу, которая выводит "Hello, Python!" с помощью функции print().`,
+            initialCode: `# Напишите код ниже\n`,
+            solution: `print("Hello, Python!")`,
+            check: (output) => output.trim() === "Hello, Python!"
+        },
+        {
+            id: 1,
+            title: "Переменные и типы",
+            icon: "fa-solid fa-tag",
+            theory: `
+                <p>В Python есть несколько базовых типов:</p>
+                <ul style="margin-left: 20px;">
+                    <li><code>int</code> — целые числа: <code>42</code></li>
+                    <li><code>float</code> — дробные: <code>3.14</code></li>
+                    <li><code>str</code> — строки: <code>"Python"</code></li>
+                    <li><code>bool</code> — логический: <code>True</code> / <code>False</code></li>
+                </ul>
+                <p>Пример:</p>
+                <pre>x = 10\ny = 2.5\nname = "Иван"\nis_student = True</pre>
+                <p>Функция <code>type()</code> показывает тип данных.</p>
+            `,
+            task: `Создайте переменные:<br>
+                • <code>a = 7</code> (целое)<br>
+                • <code>b = 3.14</code> (дробное)<br>
+                • <code>c = "Python"</code> (строка)<br>
+                Выведите их сумму (a + b) и длину строки c.`,
+            initialCode: `a = 7\nb = 3.14\nc = "Python"\n# Выведите сумму и длину\n`,
+            solution: `a = 7\nb = 3.14\nc = "Python"\nprint(a + b)\nprint(len(c))`,
+            check: (output) => {
+                const lines = output.trim().split('\n');
+                return lines.length === 2 && lines[0].trim() === "10.14" && lines[1].trim() === "6";
+            }
+        },
+        {
+            id: 2,
+            title: "Условные операторы",
+            icon: "fa-solid fa-code-branch",
+            theory: `
+                <p>Условные конструкции позволяют выполнять код в зависимости от условий.</p>
+                <pre>if условие:\n    # блок кода\nelif другое_условие:\n    # блок кода\nelse:\n    # блок кода</pre>
+                <p>Операторы сравнения: <code>==</code>, <code>!=</code>, <code>&gt;</code>, <code>&lt;</code>, <code>&gt;=</code>, <code>&lt;=</code>.</p>
+                <p>Логические операторы: <code>and</code>, <code>or</code>, <code>not</code>.</p>
+            `,
+            task: `Напишите программу, которая проверяет число <code>num = 15</code>.<br>
+                Если число больше 10 — выведите "Больше 10", иначе "Меньше или равно 10".`,
+            initialCode: `num = 15\n# Ваш код\n`,
+            solution: `num = 15\nif num > 10:\n    print("Больше 10")\nelse:\n    print("Меньше или равно 10")`,
+            check: (output) => output.trim() === "Больше 10"
+        },
+        {
+            id: 3,
+            title: "Циклы",
+            icon: "fa-solid fa-arrows-spin",
+            theory: `
+                <p>В Python два основных цикла: <code>for</code> и <code>while</code>.</p>
+                <p><strong>for</strong> используется для перебора последовательностей:</p>
+                <pre>for i in range(5):\n    print(i)</pre>
+                <p><strong>while</strong> выполняется, пока условие истинно:</p>
+                <pre>count = 0\nwhile count &lt; 3:\n    print(count)\n    count += 1</pre>
+            `,
+            task: `С помощью цикла <code>for</code> выведите квадраты чисел от 1 до 5 (включительно).<br>
+                Каждый результат с новой строки.`,
+            initialCode: `# Используйте for и range\n`,
+            solution: `for i in range(1, 6):\n    print(i * i)`,
+            check: (output) => {
+                const lines = output.trim().split('\n').map(s => s.trim());
+                return lines.length === 5 &&
+                    lines[0] === "1" &&
+                    lines[1] === "4" &&
+                    lines[2] === "9" &&
+                    lines[3] === "16" &&
+                    lines[4] === "25";
+            }
+        },
+        {
+            id: 4,
+            title: "Функции",
+            icon: "fa-solid fa-cube",
+            theory: `
+                <p>Функции определяются с помощью <code>def</code>:</p>
+                <pre>def greet(name):\n    return "Привет, " + name\n\nprint(greet("Мир"))</pre>
+                <p>Функции могут принимать аргументы и возвращать значения через <code>return</code>.</p>
+                <p>Если <code>return</code> отсутствует, функция возвращает <code>None</code>.</p>
+            `,
+            task: `Создайте функцию <code>square(x)</code>, которая возвращает квадрат числа x.<br>
+                Вызовите её для x = 6 и выведите результат.`,
+            initialCode: `# Определите функцию square\n`,
+            solution: `def square(x):\n    return x * x\n\nprint(square(6))`,
+            check: (output) => output.trim() === "36"
+        }
+    ];
+
+    // ========== СОСТОЯНИЕ ==========
+    let currentLessonIndex = 0;
+    let completed = new Array(lessons.length).fill(false);
+    // Загружаем прогресс из localStorage, если есть
+    try {
+        const saved = localStorage.getItem('pycamp_progress');
+        if (saved) {
+            const parsed = JSON.parse(saved);
+            if (Array.isArray(parsed) && parsed.length === lessons.length) {
+                completed = parsed;
+            }
+        }
+    } catch (e) { /* ignore */ }
+
+    // ========== DOM ЭЛЕМЕНТЫ ==========
+    const lessonListEl = document.getElementById('lessonList');
+    const contentArea = document.getElementById('contentArea');
+    const progressText = document.getElementById('progressText');
+    const progressFill = document.getElementById('progressFill');
+
+    // ========== ФУНКЦИИ ==========
+    function saveProgress() {
+        try {
+            localStorage.setItem('pycamp_progress', JSON.stringify(completed));
+        } catch (e) { /* ignore */ }
+    }
+
+    function updateProgress() {
+        const done = completed.filter(Boolean).length;
+        progressText.textContent = `${done} / ${lessons.length} уроков`;
+        progressFill.style.width = `${(done / lessons.length) * 100}%`;
+    }
+
+    function renderSidebar() {
+        lessonListEl.innerHTML = '';
+        lessons.forEach((lesson, idx) => {
+            const div = document.createElement('div');
+            div.className = `lesson-item ${idx === currentLessonIndex ? 'active' : ''} ${completed[idx] ? 'completed' : ''}`;
+            div.innerHTML = `
+                <i class="${completed[idx] ? 'fa-solid fa-check-circle' : lesson.icon}"></i>
+                <span>${idx + 1}. ${lesson.title}</span>
+            `;
+            div.addEventListener('click', () => {
+                currentLessonIndex = idx;
+                renderSidebar();
+                renderLesson();
+            });
+            lessonListEl.appendChild(div);
+        });
+    }
+
+    function renderLesson() {
+        const lesson = lessons[currentLessonIndex];
+        const isCompleted = completed[currentLessonIndex];
+
+        contentArea.innerHTML = `
+            <div class="lesson-header">
+                <h1>${lesson.title}</h1>
+                <span class="badge">Урок ${currentLessonIndex + 1} из ${lessons.length}</span>
+            </div>
+            <div class="theory">
+                ${lesson.theory}
+            </div>
+            <div class="task">
+                <h3><i class="fa-solid fa-pencil"></i> Практическое задание</h3>
+                <p style="margin-bottom: 16px; color: #1e293b;">${lesson.task}</p>
+                <div class="editor-container">
+                    <div class="editor-header">
+                        <span><i class="fa-brands fa-python"></i> main.py</span>
+                        <span><i class="fa-regular fa-keyboard"></i> Редактор</span>
+                    </div>
+                    <textarea class="code-editor" id="codeEditor" spellcheck="false">${lesson.initialCode}</textarea>
+                    <div class="editor-actions">
+                        <button class="btn btn-primary" id="runBtn"><i class="fa-solid fa-play"></i> Запустить</button>
+                        <button class="btn btn-outline" id="resetBtn"><i class="fa-solid fa-rotate-left"></i> Сбросить</button>
+                        <button class="btn btn-outline" id="solutionBtn"><i class="fa-solid fa-lightbulb"></i> Решение</button>
+                    </div>
+                </div>
+                <div id="output" class="output">Здесь появится результат...</div>
+                ${isCompleted ? `
+                    <div class="completion-message">
+                        <i class="fa-solid fa-circle-check"></i>
+                        <span>Урок уже пройден! Вы можете повторить задание.</span>
+                    </div>
+                ` : ''}
+            </div>
+            <div class="navigation">
+                <button class="btn btn-outline" id="prevBtn" ${currentLessonIndex === 0 ? 'disabled' : ''}>
+                    <i class="fa-solid fa-arrow-left"></i> Назад
+                </button>
+                <button class="btn btn-outline" id="nextBtn" ${currentLessonIndex === lessons.length - 1 ? 'disabled' : ''}>
+                    Вперёд <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </div>
+        `;
+
+        // Привязываем обработчики
+        const runBtn = document.getElementById('runBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const solutionBtn = document.getElementById('solutionBtn');
+        const codeEditor = document.getElementById('codeEditor');
+        const outputEl = document.getElementById('output');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+
+        // Run
+        runBtn.addEventListener('click', () => {
+            const code = codeEditor.value;
+            // Перехватываем вывод
+            let output = '';
+            const originalLog = console.log;
+            console.log = (...args) => {
+                output += args.map(arg => String(arg)).join(' ') + '\n';
+            };
+            try {
+                // Выполняем код в изолированном контексте
+                const fn = new Function(code);
+                fn();
+                console.log = originalLog;
+
+                if (!output) output = '(нет вывода)';
+                outputEl.textContent = output;
+                outputEl.className = 'output';
+
+                // Проверяем задание
+                const isCorrect = lesson.check(output);
+                if (isCorrect) {
+                    outputEl.classList.add('success');
+                    outputEl.textContent = '✅ Верно! Задание выполнено.\n' + output;
+                    if (!completed[currentLessonIndex]) {
+                        completed[currentLessonIndex] = true;
+                        saveProgress();
+                        updateProgress();
+                        renderSidebar();
+                        // обновляем сообщение о завершении
+                        if (!document.querySelector('.completion-message')) {
+                            const msg = document.createElement('div');
+                            msg.className = 'completion-message';
+                            msg.innerHTML = '<i class="fa-solid fa-circle-check"></i><span>Урок пройден! Отличная работа.</span>';
+                            document.querySelector('.task').appendChild(msg);
+                        }
+                    }
+                } else {
+                    outputEl.classList.add('error');
+                    outputEl.textContent = '❌ Не совсем верно. Попробуйте ещё раз.\n' + output;
+                }
+            } catch (e) {
+                console.log = originalLog;
+                outputEl.className = 'output error';
+                outputEl.textContent = '⚠️ Ошибка выполнения: ' + e.message;
+            }
+        });
+
+        // Reset
+        resetBtn.addEventListener('click', () => {
+            codeEditor.value = lesson.initialCode;
+            outputEl.textContent = 'Здесь появится результат...';
+            outputEl.className = 'output';
+        });
+
+        // Solution
+        solutionBtn.addEventListener('click', () => {
+            if (confirm('Показать решение? Это сбросит ваш текущий код.')) {
+                codeEditor.value = lesson.solution;
+                outputEl.textContent = 'Решение загружено. Нажмите "Запустить" для проверки.';
+                outputEl.className = 'output';
+            }
+        });
+
+        // Navigation
+        if (prevBtn) {
+            prevBtn.addEventListener('click', () => {
+                if (currentLessonIndex > 0) {
+                    currentLessonIndex--;
+                    renderSidebar();
+                    renderLesson();
+                }
+            });
+        }
+        if (nextBtn) {
+            nextBtn.addEventListener('click', () => {
+                if (currentLessonIndex < lessons.length - 1) {
+                    currentLessonIndex++;
+                    renderSidebar();
+                    renderLesson();
+                }
+            });
+        }
+    }
+
+    // Инициализация
+    function init() {
+        updateProgress();
+        renderSidebar();
+        renderLesson();
+    }
+
+    init();
+</script>
+</body>
+</html>

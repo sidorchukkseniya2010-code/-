@@ -1,0 +1,1572 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OpenClaw — Интерактивный учебник по Python</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* ============================================
+       OPENCLAW PYTHON ACADEMY — СТИЛИ
+       Автономный агент v3.7.1
+       ============================================ */
+    :root {
+      --bg-primary: #1e1e2e;
+      --bg-secondary: #181825;
+      --bg-tertiary: #11111b;
+      --bg-deep: #0d0d17;
+      --text-primary: #cdd6f4;
+      --text-secondary: #a6adc8;
+      --text-muted: #6c7086;
+      --accent-blue: #89b4fa;
+      --accent-green: #a6e3a1;
+      --accent-purple: #cba6f7;
+      --accent-pink: #f5c2e7;
+      --accent-yellow: #f9e2af;
+      --accent-red: #f38ba8;
+      --accent-cyan: #89dceb;
+      --neon-blue: #00d4ff;
+      --neon-purple: #b44aff;
+      --neon-green: #00ff88;
+      --border-color: #313244;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      overflow-x: hidden;
+      min-height: 100vh;
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: var(--bg-tertiary); }
+    ::-webkit-scrollbar-thumb { background: var(--text-muted); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--text-secondary); }
+
+    /* ============================================
+       АНИМАЦИИ
+       ============================================ */
+    @keyframes pulse-neon {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
+    }
+    @keyframes logEntry {
+      from { opacity: 0; transform: translateX(-10px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes glow-pulse {
+      0%, 100% { box-shadow: 0 0 5px rgba(166,227,161,0.3), 0 0 10px rgba(166,227,161,0.1); }
+      50% { box-shadow: 0 0 15px rgba(166,227,161,0.5), 0 0 30px rgba(166,227,161,0.2); }
+    }
+    @keyframes typing-cursor {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
+    .animate-fade-in { animation: fadeIn 0.4s ease forwards; }
+    .animate-slide-up { animation: slideUp 0.5s ease forwards; }
+    .animate-pulse-dot { animation: pulse-neon 2s ease-in-out infinite; }
+    .animate-glow { animation: glow-pulse 2s ease-in-out infinite; }
+
+    /* ============================================
+       HEADER
+       ============================================ */
+    .header {
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      background: rgba(24, 24, 37, 0.95);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-color);
+    }
+    .header-inner {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .header-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .header-logo {
+      font-size: 28px;
+      position: relative;
+    }
+    .header-logo-dot {
+      position: absolute;
+      top: -2px;
+      right: -2px;
+      width: 10px;
+      height: 10px;
+      background: var(--accent-green);
+      border-radius: 50%;
+      animation: pulse-neon 2s ease-in-out infinite;
+    }
+    .header-title {
+      font-size: 18px;
+      font-weight: 700;
+      background: linear-gradient(90deg, var(--accent-blue), var(--accent-purple), var(--accent-pink));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .header-subtitle {
+      font-size: 10px;
+      color: var(--text-muted);
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .header-nav {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .header-progress {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+    .lesson-dots {
+      display: flex;
+      gap: 4px;
+    }
+    .lesson-dot {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border: none;
+      outline: none;
+    }
+    .lesson-dot.active {
+      background: var(--accent-blue);
+      color: var(--bg-primary);
+      box-shadow: 0 0 10px rgba(137,180,250,0.4);
+    }
+    .lesson-dot.completed {
+      background: rgba(166,227,161,0.15);
+      color: var(--accent-green);
+      border: 1px solid rgba(166,227,161,0.3);
+    }
+    .lesson-dot.pending {
+      background: var(--border-color);
+      color: var(--text-muted);
+    }
+    .lesson-dot:hover:not(.active) {
+      background: #45475a;
+      color: var(--text-primary);
+    }
+
+    /* ============================================
+       LAYOUT
+       ============================================ */
+    .main {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 24px 16px 120px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 24px;
+    }
+    @media (min-width: 1024px) {
+      .grid { grid-template-columns: 1fr 2fr; }
+    }
+
+    /* ============================================
+       CARDS
+       ============================================ */
+    .card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .card-glow {
+      box-shadow: inset 0 0 30px rgba(0,212,255,0.02), 0 0 15px rgba(0,212,255,0.03);
+    }
+    .card-header {
+      padding: 16px;
+      border-bottom: 1px solid var(--border-color);
+    }
+    .card-body { padding: 16px; }
+
+    /* ============================================
+       LESSON INFO
+       ============================================ */
+    .lesson-icon { font-size: 32px; }
+    .lesson-title { font-size: 18px; font-weight: 700; margin-top: 8px; }
+    .lesson-desc { font-size: 14px; color: var(--text-secondary); margin-top: 4px; }
+    .difficulty-badge {
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      border: 1px solid;
+    }
+    .difficulty-easy { color: var(--accent-green); background: rgba(166,227,161,0.1); border-color: rgba(166,227,161,0.3); }
+    .difficulty-medium { color: var(--accent-yellow); background: rgba(249,226,175,0.1); border-color: rgba(249,226,175,0.3); }
+    .difficulty-hard { color: var(--accent-red); background: rgba(243,139,168,0.1); border-color: rgba(243,139,168,0.3); }
+
+    .theory-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--accent-purple);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .theory-list { list-style: none; }
+    .theory-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+      line-height: 1.5;
+    }
+    .theory-bullet {
+      color: var(--accent-blue);
+      margin-top: 3px;
+      flex-shrink: 0;
+    }
+
+    /* Expected output */
+    .expected-header {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .expected-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--accent-yellow);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .expected-body {
+      padding: 12px 16px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+    }
+    .expected-line { color: var(--accent-green); line-height: 1.6; }
+    .expected-prompt { color: var(--text-muted); margin-right: 8px; }
+
+    /* Hints */
+    .hint-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      font-size: 13px;
+      color: var(--text-secondary);
+      background: var(--bg-tertiary);
+      border-radius: 8px;
+      padding: 8px 12px;
+      margin-bottom: 8px;
+    }
+
+    /* Navigation buttons */
+    .nav-buttons { display: flex; gap: 8px; }
+
+    /* ============================================
+       NEON BUTTONS
+       ============================================ */
+    .neon-btn {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      font-family: 'Inter', sans-serif;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      border: 1px solid;
+      outline: none;
+    }
+    .neon-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      transform: none !important;
+      box-shadow: none !important;
+    }
+    .neon-btn:not(:disabled):hover { transform: translateY(-1px); }
+
+    .neon-btn-blue {
+      background: #1e3a5f;
+      color: var(--accent-blue);
+      border-color: rgba(137,180,250,0.3);
+      box-shadow: 0 0 5px rgba(137,180,250,0.2);
+    }
+    .neon-btn-blue:not(:disabled):hover {
+      background: #1e4a7f;
+      box-shadow: 0 0 10px rgba(137,180,250,0.4), 0 0 20px rgba(137,180,250,0.2);
+    }
+
+    .neon-btn-green {
+      background: #1e3f2e;
+      color: var(--accent-green);
+      border-color: rgba(166,227,161,0.3);
+      box-shadow: 0 0 5px rgba(166,227,161,0.2);
+    }
+    .neon-btn-green:not(:disabled):hover {
+      background: #1e5f3e;
+      box-shadow: 0 0 10px rgba(166,227,161,0.4), 0 0 20px rgba(166,227,161,0.2);
+    }
+
+    .neon-btn-purple {
+      background: #2e1e4f;
+      color: var(--accent-purple);
+      border-color: rgba(203,166,247,0.3);
+      box-shadow: 0 0 5px rgba(203,166,247,0.2);
+    }
+    .neon-btn-purple:not(:disabled):hover {
+      background: #3e2e6f;
+      box-shadow: 0 0 10px rgba(203,166,247,0.4), 0 0 20px rgba(203,166,247,0.2);
+    }
+
+    .neon-btn-sm { padding: 4px 10px; font-size: 11px; }
+    .neon-btn-full { width: 100%; }
+
+    /* ============================================
+       CODE EDITOR
+       ============================================ */
+    .editor-wrapper {
+      display: flex;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid var(--border-color);
+      background: var(--bg-tertiary);
+    }
+    .editor-lines {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      padding: 12px 8px;
+      background: var(--bg-deep);
+      color: var(--text-muted);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      user-select: none;
+      min-width: 40px;
+      overflow: hidden;
+      line-height: 1.6;
+    }
+    .editor-textarea {
+      flex: 1;
+      background: transparent;
+      color: var(--text-primary);
+      padding: 12px;
+      border: none;
+      outline: none;
+      resize: none;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      line-height: 1.6;
+      min-height: 220px;
+      tab-size: 4;
+      white-space: pre;
+      overflow-wrap: normal;
+      overflow-x: auto;
+    }
+
+    /* Editor header */
+    .editor-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    .editor-tabs {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .editor-tab-dot {
+      width: 12px; height: 12px;
+      border-radius: 50%;
+    }
+    .editor-filename {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-family: 'JetBrains Mono', monospace;
+      margin-left: 8px;
+    }
+    .editor-status {
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .editor-status.success { color: var(--accent-green); }
+    .editor-status.error { color: var(--accent-red); }
+
+    /* Action bar */
+    .action-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    /* ============================================
+       OUTPUT PANEL
+       ============================================ */
+    .output-wrapper {
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      background: var(--bg-tertiary);
+      overflow: hidden;
+      margin-top: 16px;
+    }
+    .output-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      background: var(--bg-deep);
+      border-bottom: 1px solid var(--border-color);
+    }
+    .output-title {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .output-body {
+      padding: 12px;
+      min-height: 100px;
+      max-height: 200px;
+      overflow-y: auto;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+    }
+    .output-line {
+      color: var(--accent-green);
+      line-height: 1.8;
+    }
+    .output-prompt { color: var(--text-muted); margin-right: 8px; }
+    .output-empty { color: var(--text-muted); font-style: italic; font-size: 12px; }
+    .output-error { color: var(--accent-red); }
+    .output-error-title { font-weight: 600; }
+    .output-error-msg { font-size: 12px; opacity: 0.8; margin-top: 4px; }
+
+    /* ============================================
+       PROGRESS BAR
+       ============================================ */
+    .progress-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 16px;
+      margin-top: 16px;
+    }
+    .progress-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    .progress-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .progress-percent {
+      font-size: 12px;
+      color: var(--accent-blue);
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .progress-bar {
+      height: 8px;
+      background: var(--bg-tertiary);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent-blue), var(--accent-purple), var(--accent-green));
+      border-radius: 999px;
+      transition: width 0.5s ease;
+    }
+    .progress-dots {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 8px;
+    }
+    .progress-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      transition: all 0.3s ease;
+    }
+    .progress-dot.done {
+      background: var(--accent-green);
+      box-shadow: 0 0 5px rgba(166,227,161,0.5);
+    }
+    .progress-dot.current {
+      background: var(--accent-blue);
+      box-shadow: 0 0 5px rgba(137,180,250,0.5);
+    }
+    .progress-dot.future { background: var(--border-color); }
+
+    /* ============================================
+       SUCCESS MODAL
+       ============================================ */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(4px);
+      animation: fadeIn 0.3s ease;
+    }
+    .modal-content {
+      background: var(--bg-secondary);
+      border: 1px solid rgba(166,227,161,0.3);
+      border-radius: 16px;
+      padding: 32px;
+      max-width: 400px;
+      width: 90%;
+      text-align: center;
+      box-shadow: 0 0 40px rgba(166,227,161,0.15);
+      animation: fadeIn 0.4s ease;
+    }
+    .modal-emoji { font-size: 48px; margin-bottom: 16px; }
+    .modal-title { font-size: 20px; font-weight: 700; color: var(--accent-green); margin-bottom: 8px; }
+    .modal-text { font-size: 14px; color: var(--text-secondary); margin-bottom: 20px; }
+    .modal-buttons { display: flex; gap: 12px; justify-content: center; }
+
+    /* ============================================
+       AGENT LOG PANEL
+       ============================================ */
+    .agent-panel {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 50;
+    }
+    .agent-toggle {
+      position: absolute;
+      top: -40px;
+      left: 16px;
+      padding: 8px 16px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-bottom: none;
+      border-radius: 8px 8px 0 0;
+      color: var(--accent-purple);
+      font-size: 13px;
+      font-weight: 500;
+      font-family: 'Inter', sans-serif;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+      outline: none;
+    }
+    .agent-toggle:hover { background: var(--bg-primary); }
+    .agent-toggle-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--accent-green);
+      animation: pulse-neon 2s ease-in-out infinite;
+    }
+    .agent-body {
+      background: var(--bg-tertiary);
+      border-top: 1px solid var(--border-color);
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.5s ease;
+    }
+    .agent-body.open { max-height: 320px; }
+    .agent-inner {
+      padding: 16px;
+      height: 320px;
+      display: flex;
+      flex-direction: column;
+    }
+    .agent-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border-color);
+      margin-bottom: 12px;
+    }
+    .agent-header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .agent-dots { display: flex; gap: 6px; }
+    .agent-dot { width: 12px; height: 12px; border-radius: 50%; }
+    .agent-url {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .agent-status {
+      font-size: 11px;
+      color: var(--accent-green);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .agent-status-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--accent-green);
+      animation: pulse-neon 2s ease-in-out infinite;
+    }
+    .agent-logs {
+      flex: 1;
+      overflow-y: auto;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+    }
+    .log-line {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      padding: 2px 0;
+      animation: logEntry 0.3s ease forwards;
+      opacity: 0;
+    }
+    .log-time { color: var(--text-muted); flex-shrink: 0; }
+    .log-msg-info { color: var(--accent-blue); }
+    .log-msg-success { color: var(--accent-green); }
+    .log-msg-warning { color: var(--accent-yellow); }
+    .log-msg-system { color: var(--accent-purple); }
+    .log-msg-code { color: var(--accent-cyan); }
+    .log-cursor {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text-muted);
+      padding: 4px 0;
+    }
+    .log-cursor-blink { animation: typing-cursor 1s step-end infinite; }
+
+    /* ============================================
+       RESPONSIVE
+       ============================================ */
+    @media (max-width: 640px) {
+      .header-nav { gap: 8px; }
+      .header-progress { display: none; }
+      .lesson-dot { width: 24px; height: 24px; font-size: 10px; }
+      .header-title { font-size: 14px; }
+    }
+
+    /* ============================================
+       SIDEBAR SPACING
+       ============================================ */
+    .sidebar { display: flex; flex-direction: column; gap: 16px; }
+    .editor-area { display: flex; flex-direction: column; }
+
+    /* Hidden root for React */
+    #root { display: none; }
+  </style>
+</head>
+<body>
+  <!-- React root (скрыт, не используется) -->
+  <div id="root"></div>
+
+  <!-- ============================================
+       ОСНОВНОЙ ИНТЕРФЕЙС
+       ============================================ -->
+  <div id="app">
+    <!-- HEADER -->
+    <header class="header">
+      <div class="header-inner">
+        <div class="header-brand">
+          <div class="header-logo">
+            🐾
+            <span class="header-logo-dot"></span>
+          </div>
+          <div>
+            <div class="header-title">OpenClaw Python Academy</div>
+            <div class="header-subtitle">autonomous AI agent • v3.7.1</div>
+          </div>
+        </div>
+        <div class="header-nav">
+          <div class="header-progress">
+            <i class="fas fa-check-circle" style="color: var(--accent-green)"></i>
+            <span id="progress-text">0/8 уроков</span>
+          </div>
+          <div class="lesson-dots" id="lesson-dots"></div>
+        </div>
+      </div>
+    </header>
+
+    <!-- MAIN -->
+    <main class="main">
+      <div class="grid">
+        <!-- LEFT SIDEBAR -->
+        <div class="sidebar" id="sidebar"></div>
+
+        <!-- RIGHT EDITOR -->
+        <div class="editor-area" id="editor-area"></div>
+      </div>
+    </main>
+
+    <!-- AGENT LOG PANEL -->
+    <div class="agent-panel">
+      <button class="agent-toggle" id="agent-toggle">
+        <span class="agent-toggle-dot"></span>
+        <i class="fas fa-robot"></i>
+        Лог агента OpenClaw
+        <i class="fas fa-chevron-up" id="agent-chevron" style="font-size:10px; margin-left:4px;"></i>
+      </button>
+      <div class="agent-body" id="agent-body">
+        <div class="agent-inner">
+          <div class="agent-header">
+            <div class="agent-header-left">
+              <div class="agent-dots">
+                <div class="agent-dot" style="background:var(--accent-red)"></div>
+                <div class="agent-dot" style="background:var(--accent-yellow)"></div>
+                <div class="agent-dot" style="background:var(--accent-green)"></div>
+              </div>
+              <span class="agent-url">openclaw://agent/logs/production</span>
+            </div>
+            <div class="agent-status">
+              <span class="agent-status-dot"></span>
+              ONLINE
+            </div>
+          </div>
+          <div class="agent-logs" id="agent-logs"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SUCCESS MODAL -->
+    <div class="modal-overlay" id="modal" style="display:none;">
+      <div class="modal-content">
+        <div class="modal-emoji">🎉</div>
+        <div class="modal-title">Отлично!</div>
+        <div class="modal-text" id="modal-text"></div>
+        <div class="modal-buttons">
+          <button class="neon-btn neon-btn-blue" onclick="closeModal()">Остаться</button>
+          <button class="neon-btn neon-btn-green" id="modal-next" onclick="closeModal(); nextLesson();">Далее →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ============================================
+    // ДАННЫЕ УРОКОВ
+    // ============================================
+    const lessons = [
+      {
+        id: 1, title: 'Первая программа', icon: '🚀',
+        description: 'Научись выводить текст с помощью print()',
+        theory: [
+          'Функция print() — основная команда для вывода информации на экран.',
+          'Текст (строка) заключается в кавычки: "Привет" или \'Привет\'.',
+          'Python выполняет команды построчно, сверху вниз.'
+        ],
+        starterCode: '# Напиши свою первую программу!\n# Используй print() для вывода текста\n\nprint("Привет, мир!")',
+        expectedOutput: ['Привет, мир!'],
+        hints: ['Используй print("текст") для вывода', 'Не забудь кавычки вокруг текста'],
+        difficulty: 'easy'
+      },
+      {
+        id: 2, title: 'Переменные', icon: '📦',
+        description: 'Создавай переменные и храни в них данные',
+        theory: [
+          'Переменная — это именованная ячейка памяти для хранения данных.',
+          'Создание: имя = значение (например: name = "Алиса")',
+          'Имена переменных: буквы, цифры, underscore. Начинаются с буквы.',
+          'Типы данных: строки (str), числа (int), дробные (float).'
+        ],
+        starterCode: '# Создай переменную name со значением "Python"\n# Создай переменную version со значением 3\n# Выведи их с помощью print\n\nname = "Python"\nversion = 3\nprint(name)\nprint(version)',
+        expectedOutput: ['Python', '3'],
+        hints: ['Переменная создаётся так: имя = значение', 'print(имя_переменной) выведет её значение'],
+        difficulty: 'easy'
+      },
+      {
+        id: 3, title: 'Арифметика', icon: '🔢',
+        description: 'Выполняй математические операции',
+        theory: [
+          'Python умеет считать: + (сложение), - (вычитание), * (умножение), / (деление).',
+          'Также: ** (степень), // (целочисленное деление), % (остаток).',
+          'Можно сохранять результат в переменную: result = 2 + 3'
+        ],
+        starterCode: '# Вычисли и выведи результат\n\na = 15\nb = 4\nprint(a + b)\nprint(a - b)\nprint(a * b)\nprint(a // b)',
+        expectedOutput: ['19', '11', '60', '3'],
+        hints: ['Используй +, -, *, // для операций', 'print(выражение) выведет результат'],
+        difficulty: 'easy'
+      },
+      {
+        id: 4, title: 'Цикл for', icon: '🔄',
+        description: 'Повторяй действия с помощью цикла for',
+        theory: [
+          'Цикл for повторяет блок кода определённое количество раз.',
+          'Синтаксис: for переменная in range(число):',
+          'range(n) генерирует числа от 0 до n-1.',
+          'Тело цикла — строки с отступом (4 пробела или Tab).'
+        ],
+        starterCode: '# Выведи числа от 0 до 4 с помощью цикла for\n\nfor i in range(5):\n    print(i)',
+        expectedOutput: ['0', '1', '2', '3', '4'],
+        hints: ['for i in range(5) — цикл от 0 до 4', 'Тело цикла с отступом: print(i)'],
+        difficulty: 'medium'
+      },
+      {
+        id: 5, title: 'Цикл и переменные', icon: '⚡',
+        description: 'Накапливай значения в цикле',
+        theory: [
+          'В цикле можно изменять переменные — это называется "аккумулятор".',
+          'Пример: сумма всех чисел от 1 до 10.',
+          'Создай переменную до цикла, обновляй её внутри.'
+        ],
+        starterCode: '# Вычисли сумму чисел от 1 до 5\n\nsum = 0\nfor i in range(1, 6):\n    sum = sum + i\nprint(sum)',
+        expectedOutput: ['15'],
+        hints: ['Начальное значение sum = 0', 'range(1, 6) даёт числа 1, 2, 3, 4, 5', 'sum = sum + i добавляет i к сумме'],
+        difficulty: 'medium'
+      },
+      {
+        id: 6, title: 'Строки и f-strings', icon: '💬',
+        description: 'Форматируй вывод с переменными',
+        theory: [
+          'f-строки позволяют вставлять переменные прямо в текст.',
+          'Синтаксис: f"Привет, {name}!" — переменная в фигурных скобках.',
+          'Можно вставлять выражения: f"Результат: {a + b}".'
+        ],
+        starterCode: '# Используй f-строку для вывода\n\nname = "OpenClaw"\nlevel = 42\nprint(f"Агент {name}, уровень {level}")',
+        expectedOutput: ['Агент OpenClaw, уровень 42'],
+        hints: ['f"текст {переменная}" — f-строка', 'Переменные вставляются в {}'],
+        difficulty: 'medium'
+      },
+      {
+        id: 7, title: 'Вложенные циклы', icon: '🌀',
+        description: 'Цикл внутри цикла — паттерны и таблицы',
+        theory: [
+          'Цикл может содержать другой цикл — это вложенные циклы.',
+          'Внешний цикл выполняется полностью на каждой итерации внутреннего.',
+          'Полезно для создания таблиц, паттернов, матриц.'
+        ],
+        starterCode: '# Выведи таблицу умножения для числа 3\n\nfor i in range(1, 4):\n    result = 3 * i\n    print(result)',
+        expectedOutput: ['3', '6', '9'],
+        hints: ['Внешний цикл: for i in range(1, 4)', 'Внутри: result = 3 * i, затем print(result)'],
+        difficulty: 'hard'
+      },
+      {
+        id: 8, title: 'Финальный вызов', icon: '🏆',
+        description: 'Комбинируй всё изученное!',
+        theory: [
+          'Финальное задание: объедини переменные, циклы и вывод.',
+          'Вычисли факториал числа 5 (5! = 1*2*3*4*5 = 120).',
+          'Используй переменную-аккумулятор и цикл for.'
+        ],
+        starterCode: '# Вычисли факториал 5!\n# 5! = 1 * 2 * 3 * 4 * 5 = 120\n\nresult = 1\nfor i in range(1, 6):\n    result = result * i\nprint(result)',
+        expectedOutput: ['120'],
+        hints: ['Начни с result = 1', 'Цикл: for i in range(1, 6)', 'Внутри: result = result * i'],
+        difficulty: 'hard'
+      }
+    ];
+
+    // ============================================
+    // ЛОГИ АГЕНТА
+    // ============================================
+    const agentLogs = [
+      { time: '00:00:01', type: 'system', msg: '🤖 Инициализация автономного агента OpenClaw v3.7.1' },
+      { time: '00:00:02', type: 'info', msg: '📡 Подключение к нейросетевому ядру... Успешно' },
+      { time: '00:00:03', type: 'info', msg: '🧠 Загрузка модулей: parser.py, validator.js, ui.renderer' },
+      { time: '00:00:05', type: 'code', msg: '⚙️ Компиляция интерпретатора Python-симулятора...' },
+      { time: '00:00:07', type: 'success', msg: '✅ Парсер выражений: поддержка +, -, *, /, //, %, **' },
+      { time: '00:00:08', type: 'success', msg: '✅ Модуль переменных: str, int, float, f-strings' },
+      { time: '00:00:10', type: 'code', msg: '⚙️ Генерация AST для обработки циклов for...in range()' },
+      { time: '00:00:12', type: 'success', msg: '✅ Вложенные циклы: рекурсивный обход блоков с отступами' },
+      { time: '00:00:14', type: 'info', msg: '🎨 Рендеринг UI: тема Catppuccin Mocha + неоновые акценты' },
+      { time: '00:00:16', type: 'code', msg: '⚙️ Построение системы уроков: 8 модулей от базового до продвинутого' },
+      { time: '00:00:18', type: 'success', msg: '✅ Валидатор кода: проверка вывода, обработка ошибок' },
+      { time: '00:00:20', type: 'info', msg: '🔐 Активация системы подсказок с адаптивной сложностью' },
+      { time: '00:00:22', type: 'warning', msg: '⚠️ Обнаружена рекурсивная зависимость в блоке 7 → решена' },
+      { time: '00:00:24', type: 'success', msg: '✅ Финальная оптимизация: время отклика < 5ms' },
+      { time: '00:00:25', type: 'system', msg: '🏁 Агент OpenClaw: учебник полностью сгенерирован. Готов к работе!' }
+    ];
+
+    // ============================================
+    // СОСТОЯНИЕ ПРИЛОЖЕНИЯ
+    // ============================================
+    let currentLesson = 0;
+    let completedLessons = new Set();
+    let showHints = false;
+    let currentHintIndex = 0;
+    let logPanelOpen = false;
+    let logsRendered = 0;
+
+    // ============================================
+    // СИМУЛЯТОР PYTHON
+    // ============================================
+    class PythonSimulator {
+      constructor() {
+        this.variables = new Map();
+        this.output = [];
+        this.maxIterations = 1000;
+      }
+
+      reset() {
+        this.variables.clear();
+        this.output = [];
+      }
+
+      execute(code) {
+        this.reset();
+        try {
+          const lines = code.split('\n').filter(l => {
+            const t = l.trim();
+            return t !== '' && !t.startsWith('#');
+          });
+          this.execBlock(lines, 0, lines.length, 0);
+          return { success: true, output: [...this.output] };
+        } catch (e) {
+          return { success: false, output: [...this.output], error: e.message || 'Ошибка выполнения' };
+        }
+      }
+
+      getIndent(line) {
+        const m = line.match(/^(\s*)/);
+        return m ? m[1].length : 0;
+      }
+
+      execBlock(lines, start, end, baseIndent) {
+        let i = start;
+        let iters = 0;
+
+        while (i < end) {
+          if (++iters > this.maxIterations) throw new Error('Превышен лимит итераций (бесконечный цикл?)');
+
+          const line = lines[i];
+          const trimmed = line.trim();
+          const indent = this.getIndent(line);
+
+          if (indent < baseIndent && trimmed !== '') { break; }
+          if (trimmed === '' || trimmed.startsWith('#')) { i++; continue; }
+
+          // for цикл
+          const forMatch = trimmed.match(/^for\s+(\w+)\s+in\s+range\((.+)\):$/);
+          if (forMatch) {
+            const varName = forMatch[1];
+            const rangeArgs = this.parseRange(forMatch[2]);
+            const bodyStart = i + 1;
+            const bodyEnd = this.findBlockEnd(lines, bodyStart, end, indent);
+
+            for (let v = rangeArgs.start; v < rangeArgs.end; v += rangeArgs.step) {
+              this.variables.set(varName, v);
+              this.execBlock(lines, bodyStart, bodyEnd, indent + 1);
+            }
+            i = bodyEnd;
+            continue;
+          }
+
+          // print
+          const printMatch = trimmed.match(/^print\((.+)\)$/);
+          if (printMatch) {
+            const val = this.eval(printMatch[1]);
+            this.output.push(String(val));
+            i++;
+            continue;
+          }
+
+          // присваивание с операцией
+          const opAssign = trimmed.match(/^(\w+)\s*(\+|-|\*|\/\/|\/|%)=\s*(.+)$/);
+          if (opAssign) {
+            const name = opAssign[1];
+            const op = opAssign[2];
+            const val = this.eval(opAssign[3]);
+            let cur = this.variables.get(name);
+            if (cur === undefined) cur = (op === '*' ? 1 : 0);
+            switch (op) {
+              case '+': cur += val; break;
+              case '-': cur -= val; break;
+              case '*': cur *= val; break;
+              case '//': cur = Math.floor(cur / val); break;
+              case '/': cur /= val; break;
+              case '%': cur %= val; break;
+            }
+            this.variables.set(name, cur);
+            i++;
+            continue;
+          }
+
+          // обычное присваивание
+          const assign = trimmed.match(/^(\w+)\s*=\s*(.+)$/);
+          if (assign) {
+            const val = this.eval(assign[2]);
+            this.variables.set(assign[1], val);
+            i++;
+            continue;
+          }
+
+          i++;
+        }
+      }
+
+      findBlockEnd(lines, start, end, parentIndent) {
+        let i = start;
+        while (i < end) {
+          const indent = this.getIndent(lines[i]);
+          if (indent <= parentIndent && lines[i].trim() !== '') break;
+          i++;
+        }
+        return i;
+      }
+
+      parseRange(args) {
+        const parts = args.split(',').map(a => this.eval(a.trim()));
+        if (parts.length === 1) return { start: 0, end: parts[0], step: 1 };
+        if (parts.length === 2) return { start: parts[0], end: parts[1], step: 1 };
+        if (parts.length === 3) return { start: parts[0], end: parts[1], step: parts[2] };
+        throw new Error('Неверные аргументы range()');
+      }
+
+      eval(expr) {
+        const t = expr.trim();
+
+        // f-string
+        if ((t.startsWith('f"') && t.endsWith('"')) || (t.startsWith("f'") && t.endsWith("'"))) {
+          const content = t.slice(2, -1);
+          return content.replace(/\{([^}]+)\}/g, (_, inner) => String(this.eval(inner.trim())));
+        }
+
+        // строка
+        if ((t.startsWith('"') && t.endsWith('"')) || (t.startsWith("'") && t.endsWith("'"))) {
+          return t.slice(1, -1);
+        }
+
+        // число
+        if (/^-?\d+(\.\d+)?$/.test(t)) {
+          return t.includes('.') ? parseFloat(t) : parseInt(t);
+        }
+
+        // скобки
+        if (t.startsWith('(') && t.endsWith(')')) {
+          return this.eval(t.slice(1, -1));
+        }
+
+        // функции
+        const funcMatch = t.match(/^(str|int|float|len)\((.+)\)$/);
+        if (funcMatch) {
+          const val = this.eval(funcMatch[2]);
+          switch (funcMatch[1]) {
+            case 'str': return String(val);
+            case 'int': return parseInt(val);
+            case 'float': return parseFloat(val);
+            case 'len': return typeof val === 'string' ? val.length : 0;
+          }
+        }
+
+        // переменная
+        if (this.variables.has(t)) return this.variables.get(t);
+
+        // бинарные операции — ищем оператор с правильным приоритетом
+        const ops = [
+          { ops: ['+', '-'], assoc: 'left' },
+          { ops: ['*', '//', '/', '%'], assoc: 'left' },
+          { ops: ['**'], assoc: 'right' }
+        ];
+
+        for (const group of ops) {
+          const result = this.findOp(t, group.ops, group.assoc === 'right');
+          if (result) {
+            const left = this.eval(result.left);
+            const right = this.eval(result.right);
+            switch (result.op) {
+              case '+': return (typeof left === 'string' || typeof right === 'string') ? String(left) + String(right) : left + right;
+              case '-': return left - right;
+              case '*': return left * right;
+              case '/': return left / right;
+              case '//': return Math.floor(left / right);
+              case '%': return left % right;
+              case '**': return Math.pow(left, right);
+            }
+          }
+        }
+
+        // унарный минус
+        if (t.startsWith('-')) {
+          return -this.eval(t.slice(1));
+        }
+
+        if (/^\w+$/.test(t)) throw new Error(`Переменная '${t}' не определена`);
+        throw new Error(`Не удалось вычислить: ${t}`);
+      }
+
+      findOp(expr, operators, rightAssoc) {
+        let depth = 0;
+        let inStr = false;
+        let strCh = '';
+
+        if (rightAssoc) {
+          for (let i = 0; i < expr.length; i++) {
+            const ch = expr[i];
+            if ((ch === '"' || ch === "'") && !inStr) { inStr = true; strCh = ch; continue; }
+            if (inStr && ch === strCh) { inStr = false; continue; }
+            if (inStr) continue;
+            if (ch === '(' || ch === '[') depth++;
+            if (ch === ')' || ch === ']') depth--;
+            if (depth > 0) continue;
+
+            for (const op of operators) {
+              if (expr.slice(i, i + op.length) === op) {
+                if (op === '*' && i + 1 < expr.length && (expr[i+1] === '*' || expr[i+1] === '=')) continue;
+                if (op === '/' && i + 1 < expr.length && expr[i+1] === '/') continue;
+                if (op === '/' && i > 0 && expr[i-1] === '/') continue;
+                const left = expr.slice(0, i).trim();
+                const right = expr.slice(i + op.length).trim();
+                if (left && right) return { left, op, right };
+              }
+            }
+          }
+        } else {
+          for (let i = expr.length - 1; i >= 0; i--) {
+            const ch = expr[i];
+            if ((ch === '"' || ch === "'") && !inStr) { inStr = true; strCh = ch; continue; }
+            if (inStr && ch === strCh) { inStr = false; continue; }
+            if (inStr) continue;
+            if (ch === ')' || ch === ']') depth++;
+            if (ch === '(' || ch === '[') depth--;
+            if (depth > 0) continue;
+
+            for (const op of operators) {
+              const s = i - op.length + 1;
+              if (s >= 0 && expr.slice(s, s + op.length) === op) {
+                if (op === '*' && s > 0 && expr[s-1] === '*') continue;
+                if (op === '*' && i + 1 < expr.length && (expr[i+1] === '*' || expr[i+1] === '=')) continue;
+                if (op === '/' && s > 0 && expr[s-1] === '/') continue;
+                if (op === '/' && i + 1 < expr.length && expr[i+1] === '/') continue;
+                if ((op === '+' || op === '-') && i + 1 < expr.length && expr[i+1] === '=') continue;
+                const left = expr.slice(0, s).trim();
+                const right = expr.slice(i + 1).trim();
+                if (left && right) return { left, op, right };
+              }
+            }
+          }
+        }
+        return null;
+      }
+    }
+
+    const simulator = new PythonSimulator();
+
+    // ============================================
+    // РЕНДЕРИНГ
+    // ============================================
+    function render() {
+      const lesson = lessons[currentLesson];
+      renderDots();
+      renderSidebar(lesson);
+      renderEditor(lesson);
+      renderProgress();
+    }
+
+    function renderDots() {
+      const container = document.getElementById('lesson-dots');
+      container.innerHTML = lessons.map((l, i) => {
+        let cls = 'lesson-dot ';
+        if (i === currentLesson) cls += 'active';
+        else if (completedLessons.has(l.id)) cls += 'completed';
+        else cls += 'pending';
+        const content = completedLessons.has(l.id) && i !== currentLesson ? '✓' : (i + 1);
+        return `<button class="${cls}" onclick="goToLesson(${i})">${content}</button>`;
+      }).join('');
+
+      document.getElementById('progress-text').textContent = `${completedLessons.size}/${lessons.length} уроков`;
+    }
+
+    function renderSidebar(lesson) {
+      const diffClass = `difficulty-${lesson.difficulty}`;
+      const diffLabel = { easy: 'Легко', medium: 'Средне', hard: 'Сложно' }[lesson.difficulty];
+
+      let hintsHTML = '';
+      if (showHints) {
+        const visibleHints = lesson.hints.slice(0, currentHintIndex + 1);
+        hintsHTML = visibleHints.map(h => `<div class="hint-item"><span>💡</span><span>${h}</span></div>`).join('');
+        if (currentHintIndex < lesson.hints.length - 1) {
+          hintsHTML += `<button class="neon-btn neon-btn-purple neon-btn-sm neon-btn-full" onclick="nextHint()" style="margin-top:8px">Ещё подсказка (${currentHintIndex + 1}/${lesson.hints.length})</button>`;
+        }
+      }
+
+      document.getElementById('sidebar').innerHTML = `
+        <div class="card card-glow">
+          <div class="card-header">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+              <span class="lesson-icon">${lesson.icon}</span>
+              <span class="difficulty-badge ${diffClass}">${diffLabel}</span>
+            </div>
+            <div class="lesson-title">Урок ${lesson.id}: ${lesson.title}</div>
+            <div class="lesson-desc">${lesson.description}</div>
+          </div>
+          <div class="card-body">
+            <div class="theory-title"><i class="fas fa-book"></i> Теория</div>
+            <ul class="theory-list">
+              ${lesson.theory.map(t => `<li class="theory-item"><span class="theory-bullet">▸</span><span>${t}</span></li>`).join('')}
+            </ul>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="expected-header">
+            <i class="fas fa-bullseye" style="color:var(--accent-yellow);font-size:11px"></i>
+            <span class="expected-title">Ожидаемый вывод</span>
+          </div>
+          <div class="expected-body">
+            ${lesson.expectedOutput.map(l => `<div class="expected-line"><span class="expected-prompt">>>></span>${l}</div>`).join('')}
+          </div>
+        </div>
+
+        <div class="card">
+          <div style="padding:12px 16px;border-bottom:1px solid var(--border-color);display:flex;align-items:center;justify-content:space-between">
+            <div style="display:flex;align-items:center;gap:8px">
+              <i class="fas fa-lightbulb" style="color:var(--accent-yellow);font-size:11px"></i>
+              <span class="expected-title">Подсказки</span>
+            </div>
+            <button class="neon-btn neon-btn-purple neon-btn-sm" onclick="toggleHints()">${showHints ? 'Скрыть' : 'Показать'}</button>
+          </div>
+          ${showHints ? `<div class="card-body">${hintsHTML}</div>` : ''}
+        </div>
+
+        <div class="nav-buttons">
+          <button class="neon-btn neon-btn-blue" style="flex:1" onclick="prevLesson()" ${currentLesson === 0 ? 'disabled' : ''}>
+            <i class="fas fa-arrow-left"></i> Назад
+          </button>
+          <button class="neon-btn neon-btn-blue" style="flex:1" onclick="nextLesson()" ${currentLesson === lessons.length - 1 ? 'disabled' : ''}>
+            Далее <i class="fas fa-arrow-right"></i>
+          </button>
+        </div>
+      `;
+    }
+
+    function renderEditor(lesson) {
+      const code = getCurrentCode();
+      const lines = code.split('\n');
+      const lineNums = lines.map((_, i) => `<div style="height:1.6em">${i + 1}</div>`).join('');
+
+      document.getElementById('editor-area').innerHTML = `
+        <div class="editor-header">
+          <div class="editor-tabs">
+            <div class="editor-tab-dot" style="background:var(--accent-red)"></div>
+            <div class="editor-tab-dot" style="background:var(--accent-yellow)"></div>
+            <div class="editor-tab-dot" style="background:var(--accent-green)"></div>
+            <span class="editor-filename">lesson_${lesson.id}.py</span>
+          </div>
+          <div id="editor-status"></div>
+        </div>
+
+        <div class="editor-wrapper">
+          <div class="editor-lines" id="editor-lines">${lineNums}</div>
+          <textarea class="editor-textarea" id="code-input" spellcheck="false">${escapeHTML(code)}</textarea>
+        </div>
+
+        <div class="action-bar">
+          <button class="neon-btn neon-btn-green" onclick="runCode()">
+            <i class="fas fa-play"></i> Запустить
+          </button>
+          <button class="neon-btn neon-btn-blue" onclick="resetCode()">
+            <i class="fas fa-undo"></i> Сбросить
+          </button>
+          <div id="action-next"></div>
+        </div>
+
+        <div class="output-wrapper">
+          <div class="output-header">
+            <i class="fas fa-terminal" style="color:var(--accent-green);font-size:11px"></i>
+            <span class="output-title">Вывод программы</span>
+          </div>
+          <div class="output-body" id="output-body">
+            <div class="output-empty">Запустите код для просмотра вывода...</div>
+          </div>
+        </div>
+
+        <div class="progress-card" id="progress-card"></div>
+      `;
+
+      // Привязываем события
+      const textarea = document.getElementById('code-input');
+      textarea.addEventListener('input', onCodeChange);
+      textarea.addEventListener('scroll', syncScroll);
+      textarea.addEventListener('keydown', onTabKey);
+    }
+
+    function renderProgress() {
+      const pct = Math.round((completedLessons.size / lessons.length) * 100);
+      const dots = lessons.map((l, i) => {
+        let cls = 'progress-dot ';
+        if (completedLessons.has(l.id)) cls += 'done';
+        else if (i === currentLesson) cls += 'current';
+        else cls += 'future';
+        return `<div class="${cls}"></div>`;
+      }).join('');
+
+      const el = document.getElementById('progress-card');
+      if (el) {
+        el.innerHTML = `
+          <div class="progress-header">
+            <span class="progress-label">ПРОГРЕСС КУРСА</span>
+            <span class="progress-percent">${pct}%</span>
+          </div>
+          <div class="progress-bar">
+            <div class="progress-fill" style="width:${pct}%"></div>
+          </div>
+          <div class="progress-dots">${dots}</div>
+        `;
+      }
+    }
+
+    // ============================================
+    // КОД
+    // ============================================
+    let codeStorage = {};
+
+    function getCurrentCode() {
+      if (!codeStorage[currentLesson]) {
+        codeStorage[currentLesson] = lessons[currentLesson].starterCode;
+      }
+      return codeStorage[currentLesson];
+    }
+
+    function onCodeChange(e) {
+      codeStorage[currentLesson] = e.target.value;
+      // Обновляем номера строк
+      const lines = e.target.value.split('\n');
+      const lineNums = lines.map((_, i) => `<div style="height:1.6em">${i + 1}</div>`).join('');
+      document.getElementById('editor-lines').innerHTML = lineNums;
+    }
+
+    function syncScroll(e) {
+      document.getElementById('editor-lines').scrollTop = e.target.scrollTop;
+    }
+
+    function onTabKey(e) {
+      if (e.key === 'Tab') {
+        e.preventDefault();
+        const ta = e.target;
+        const start = ta.selectionStart;
+        const end = ta.selectionEnd;
+        const val = ta.value;
+        ta.value = val.substring(0, start) + '    ' + val.substring(end);
+        ta.selectionStart = ta.selectionEnd = start + 4;
+        codeStorage[currentLesson] = ta.value;
+        // Обновить номера строк
+        const lines = ta.value.split('\n');
+        const lineNums = lines.map((_, i) => `<div style="height:1.6em">${i + 1}</div>`).join('');
+        document.getElementById('editor-lines').innerHTML = lineNums;
+      }
+    }
+
+    function escapeHTML(str) {
+      return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    // ============================================
+    // ДЕЙСТВИЯ
+    // ============================================
+    function runCode() {
+      const code = getCurrentCode();
+      const result = simulator.execute(code);
+      const outputBody = document.getElementById('output-body');
+      const statusEl = document.getElementById('editor-status');
+      const actionNext = document.getElementById('action-next');
+
+      if (result.error) {
+        outputBody.innerHTML = `
+          <div class="output-error">
+            <div class="output-error-title"><i class="fas fa-exclamation-triangle"></i> Ошибка выполнения:</div>
+            <div class="output-error-msg">${escapeHTML(result.error)}</div>
+          </div>
+        `;
+        statusEl.innerHTML = '<span class="editor-status error"><i class="fas fa-times-circle"></i> Ошибка</span>';
+        actionNext.innerHTML = '';
+        return;
+      }
+
+      const output = result.output;
+      const expected = lessons[currentLesson].expectedOutput;
+      const correct = expected.length === output.length && expected.every((e, i) => e === output[i]);
+
+      if (output.length > 0) {
+        outputBody.innerHTML = output.map(l => `<div class="output-line"><span class="output-prompt">>>></span>${escapeHTML(l)}</div>`).join('');
+      } else {
+        outputBody.innerHTML = '<div class="output-empty">Программа выполнена без вывода</div>';
+      }
+
+      if (correct) {
+        statusEl.innerHTML = '<span class="editor-status success" style="animation:pulse-neon 1s ease-in-out 3"><i class="fas fa-check-circle"></i> Верно!</span>';
+        completedLessons.add(lessons[currentLesson].id);
+        renderDots();
+        renderProgress();
+
+        if (currentLesson < lessons.length - 1) {
+          actionNext.innerHTML = `<button class="neon-btn neon-btn-purple" onclick="nextLesson()"><i class="fas fa-forward"></i> Следующий урок</button>`;
+        }
+
+        // Показываем модалку
+        setTimeout(() => showModal(), 500);
+      } else {
+        statusEl.innerHTML = '<span class="editor-status error"><i class="fas fa-times-circle"></i> Попробуй ещё</span>';
+        actionNext.innerHTML = '';
+      }
+    }
+
+    function resetCode() {
+      codeStorage[currentLesson] = lessons[currentLesson].starterCode;
+      const textarea = document.getElementById('code-input');
+      if (textarea) textarea.value = lessons[currentLesson].starterCode;
+      document.getElementById('output-body').innerHTML = '<div class="output-empty">Запустите код для просмотра вывода...</div>';
+      document.getElementById('editor-status').innerHTML = '';
+      document.getElementById('action-next').innerHTML = '';
+      // Обновить номера строк
+      const lines = lessons[currentLesson].starterCode.split('\n');
+      const lineNums = lines.map((_, i) => `<div style="height:1.6em">${i + 1}</div>`).join('');
+      document.getElementById('editor-lines').innerHTML = lineNums;
+    }
+
+    function goToLesson(i) {
+      currentLesson = i;
+      showHints = false;
+      currentHintIndex = 0;
+      render();
+    }
+
+    function nextLesson() {
+      if (currentLesson < lessons.length - 1) {
+        currentLesson++;
+        showHints = false;
+        currentHintIndex = 0;
+        render();
+      }
+    }
+
+    function prevLesson() {
+      if (currentLesson > 0) {
+        currentLesson--;
+        showHints = false;
+        currentHintIndex = 0;
+        render();
+      }
+    }
+
+    function toggleHints() {
+      showHints = !showHints;
+      if (showHints) currentHintIndex = 0;
+      renderSidebar(lessons[currentLesson]);
+    }
+
+    function nextHint() {
+      if (currentHintIndex < lessons[currentLesson].hints.length - 1) {
+        currentHintIndex++;
+        renderSidebar(lessons[currentLesson]);
+      }
+    }
+
+    // ============================================
+    // МОДАЛЬНОЕ ОКНО
+    // ============================================
+    function showModal() {
+      const modal = document.getElementById('modal');
+      const text = document.getElementById('modal-text');
+      const nextBtn = document.getElementById('modal-next');
+      text.textContent = `Ты успешно прошёл урок "${lessons[currentLesson].title}"!`;
+      nextBtn.style.display = currentLesson < lessons.length - 1 ? '' : 'none';
+      modal.style.display = 'flex';
+    }
+
+    function closeModal() {
+      document.getElementById('modal').style.display = 'none';
+    }
+
+    // ============================================
+    // ЛОГ АГЕНТА
+    // ============================================
+    function toggleLogPanel() {
+      logPanelOpen = !logPanelOpen;
+      const body = document.getElementById('agent-body');
+      const chevron = document.getElementById('agent-chevron');
+
+      if (logPanelOpen) {
+        body.classList.add('open');
+        chevron.className = 'fas fa-chevron-down';
+        chevron.style.fontSize = '10px';
+        chevron.style.marginLeft = '4px';
+        startLogAnimation();
+      } else {
+        body.classList.remove('open');
+        chevron.className = 'fas fa-chevron-up';
+        chevron.style.fontSize = '10px';
+        chevron.style.marginLeft = '4px';
+      }
+    }
+
+    function startLogAnimation() {
+      if (logsRendered >= agentLogs.length) return;
+      const container = document.getElementById('agent-logs');
+
+      function addNext() {
+        if (logsRendered >= agentLogs.length || !logPanelOpen) return;
+        const log = agentLogs[logsRendered];
+        const div = document.createElement('div');
+        div.className = 'log-line';
+        div.style.animationDelay = '0ms';
+        div.innerHTML = `<span class="log-time">[${log.time}]</span><span class="log-msg-${log.type}">${log.msg}</span>`;
+        container.appendChild(div);
+        logsRendered++;
+        container.scrollTop = container.scrollHeight;
+
+        if (logsRendered < agentLogs.length) {
+          setTimeout(addNext, 250);
+        } else {
+          // Добавляем курсор в конце
+          const cursor = document.createElement('div');
+          cursor.className = 'log-cursor';
+          cursor.innerHTML = '<span class="log-cursor-blink">▊</span><span>Готов к работе</span>';
+          container.appendChild(cursor);
+        }
+      }
+      addNext();
+    }
+
+    // ============================================
+    // ИНИЦИАЛИЗАЦИЯ
+    // ============================================
+    document.getElementById('agent-toggle').addEventListener('click', toggleLogPanel);
+    render();
+  </script>
+</body>
+</html>

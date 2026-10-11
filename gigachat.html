@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PyCamp: Изучи Python с нуля</title>
+    <style>
+        :root {
+            --primary: #0066cc;
+            --secondary: #1a1a1a;
+            --text: #333;
+            --light: #f4f4f4;
+            --success: #28a745;
+            --console-bg: #1e1e1e;
+            --console-text: #00ff00;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; display: flex; height: 100vh; overflow: hidden; }
+        
+        #sidebar {
+            width: 280px; background: #222; color: #ccc; overflow-y: auto; border-right: 1px solid #444;
+            display: flex; flex-direction: column;
+        }
+        #sidebar h2 { padding: 20px; margin: 0; font-size: 1.2rem; background: #111; color: #fff; border-bottom: 1px solid #444; }
+        #lesson-list { list-style: none; flex-grow: 1; overflow-y: auto; }
+        #lesson-list li { padding: 15px 20px; cursor: pointer; border-bottom: 1px solid #333; transition: 0.2s; }
+        #lesson-list li:hover { background: #333; }
+        #lesson-list li.active { background: var(--primary); color: #fff; }
+        #lesson-list li.completed { background: var(--success); color: #fff; }
+        .progress-bar { height: 5px; background: #444; }
+        .progress-fill { height: 100%; background: var(--primary); width: 0%; transition: 0.3s; }
+
+        #main-content { flex-grow: 1; display: flex; flex-direction: column; background: #fff; }
+        #task-area { padding: 20px; border-bottom: 1px solid #eee; flex-grow: 1; overflow-y: auto; }
+        #task-area h3 { margin-bottom: 15px; color: var(--secondary); }
+        #task-area p { color: #555; line-height: 1.6; }
+        
+        #code-input {
+            width: 100%;
+            height: 150px;
+            margin-top: 20px;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-family: "Courier New", monospace;
+            font-size: 14px;
+            resize: vertical;
+            background: #f9f9f9;
+            color: #333;
+        }
+
+        #console-container {
+            height: 150px;
+            margin-top: 10px;
+            border: 1px solid #ddd;
+            border-radius: 0 0 4px 4px;
+            background: var(--console-bg);
+            color: var(--console-text);
+            font-family: "Courier New", monospace;
+            padding: 12px;
+            overflow-y: auto;
+            font-size: 14px;
+        }
+
+        #controls { padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; background: #f9f9f9; border-top: 1px solid #eee; }
+        button { padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; font-size: 1rem; }
+        #run-btn { background: var(--primary); color: #fff; }
+        #run-btn:disabled { background: #999; cursor: not-allowed; }
+        #next-btn { background: #28a745; color: #fff; display: none; }
+    </style>
+</head>
+<body>
+
+<div id="sidebar">
+    <h2>🐍 PyCamp: Python</h2>
+    <ul id="lesson-list">
+        <li data-lesson="0" class="active">1. Привет, мир!</li>
+        <li data-lesson="1">2. Переменные и типы</li>
+        <li data-lesson="2">3. Ввод данных</li>
+        <li data-lesson="3">4. Условный оператор if</li>
+        <li data-lesson="4">5. Цикл for</li>
+        <li data-lesson="5">6. Цикл while</li>
+        <li data-lesson="6">7. Списки</li>
+        <li data-lesson="7">8. Словари</li>
+        <li data-lesson="8">9. Функции</li>
+        <li data-lesson="9">10. Итоговый проект</li>
+    </ul>
+    <div class="progress-bar"><div class="progress-fill"></div></div>
+</div>
+
+<div id="main-content">
+    <div id="task-area">
+        <h3 id="task-title">Задание 1: Вывод текста</h3>
+        <p id="task-desc">Напиши код, который выводит на экран фразу "Привет, PyCamp!". Для этого в Python используется команда print().</p>
+    </div>
+    
+    <textarea id="code-input"></textarea>
+    
+    <div id="console-container">Вывод программы появится здесь...</div>
+
+    <div id="controls">
+        <button id="run-btn">▶ Выполнить код</button>
+        <button id="next-btn">Следующий урок →</button>
+    </div>
+</div>
+
+<script>
+// --- Данные курса ---
+const lessons = [
+    {
+        title: "Задание 1: Вывод текста",
+        desc: 'Напиши код, который выводит на экран фразу "Привет, PyCamp!". Для этого в Python используется команда print().',
+        solution: 'print("Привет, PyCamp!")'
+    },
+    {
+        title: "Задание 2: Переменные",
+        desc: "Создай переменную name со значением 'Алексей' и выведи её.",
+        solution: 'name = "Алексей"\nprint(name)'
+    }
+];
+
+// --- Логика приложения ---
+let currentLesson = 0;
+let completedLessons = new Set();
+
+const taskTitle = document.getElementById('task-title');
+const taskDesc = document.getElementById('task-desc');
+const lessonList = document.getElementById('lesson-list').children;
+const runBtn = document.getElementById('run-btn');
+const nextBtn = document.getElementById('next-btn');
+const consoleDiv = document.getElementById('console-container');
+const codeInput = document.getElementById('code-input');
+const progressFill = document.querySelector('.progress-fill');
+
+// Функция очистки консоли
+function clearConsole() {
+    consoleDiv.innerHTML = 'Вывод программы появится здесь...';
+    consoleDiv.style.color = 'var(--console-text)';
+}
+
+// Улучшенная функция проверки и выполнения
+function runCode() {
+    runBtn.disabled = true;
+    clearConsole();
+    
+    const userCode = codeInput.value.trim();
+
+    if (userCode === '') {
+        consoleDiv.innerHTML = 'Поле кода пустое. Введите команду print().';
+        consoleDiv.style.color = 'orange';
+        runBtn.disabled = false;
+        return;
+    }
+
+    // Регулярное выражение, которое:
+    // 1. Ищет слово print
+    // 2. Игнорирует любые пробелы вокруг скобок
+    // 3. Захватывает открывающую кавычку (одинарную или двойную)
+    // 4. Запоминает всё содержимое внутри
+    // 5. Требует такую же закрывающую кавычку (обратная ссылка \1)
+    const printRegex = /^print$\s*(['"])(.*?)\1\s*$$/;
+    const match = userCode.match(printRegex);
+
+    if (match) {
+        const outputText = match[2];
+        consoleDiv.innerHTML = outputText;
+        
+        // Проверка на точное совпадение с решением (с учетом пробелов и переносов)
+        const normalizedUser = userCode.replace(/\s/g, '');
+        const normalizedSolution = lessons[currentLesson].solution.replace(/\s/g, '');
+
+        if (normalizedUser === normalizedSolution) {
+            completedLessons.add(currentLesson);
+            updateProgress();
+            runBtn.style.display = 'none';
+            nextBtn.style.display = 'inline-block';
+            consoleDiv.innerHTML += '\n\n✅ Задание выполнено!';
+        }
+    } else {
+        consoleDiv.innerHTML = 'Ошибка: Команда не распознана. Используйте формат: print("Ваш текст") или print(\'Ваш текст\')';
+        consoleDiv.style.color = 'red';
+    }
+    
+    runBtn.disabled = false;
+}
+
+// Обновление интерфейса урока
+function loadLesson(index) {
+    currentLesson = index;
+    taskTitle.textContent = lessons[index].title;
+    taskDesc.textContent = lessons[index].desc;
+    
+    // Текстовое поле теперь всегда чистое
+    codeInput.value = '';
+    
+    runBtn.style.display = 'inline-block';
+    nextBtn.style.display = 'none';
+    runBtn.disabled = false;
+    clearConsole();
+
+    for (let i = 0; i < lessonList.length; i++) {
+        lessonList[i].classList.remove('active', 'completed');
+        if (i < index) lessonList[i].classList.add('completed');
+        if (i === index) lessonList[i].classList.add('active');
+    }
+}
+
+// Обновление прогресса
+function updateProgress() {
+    const progress = (completedLessons.size / lessons.length) * 100;
+    progressFill.style.width = progress + '%';
+    if (completedLessons.size === lessons.length) {
+        taskTitle.textContent = '🎉 Поздравляем! Курс пройден!';
+        taskDesc.textContent = 'Вы изучили основы. Теперь поле ввода можно использовать как песочницу для своих скриптов.';
+        nextBtn.style.display = 'none';
+    }
+}
+
+// --- Обработчики событий ---
+runBtn.addEventListener('click', runCode);
+nextBtn.addEventListener('click', () => {
+    if (currentLesson < lessons.length - 1) {
+        loadLesson(currentLesson + 1);
+    }
+});
+
+// Переключение урока по клику в сайдбаре
+for (let item of lessonList) {
+    item.addEventListener('click', (e) => {
+        if (!e.target.classList.contains('completed')) return;
+        loadLesson(parseInt(e.target.dataset.lesson));
+    });
+}
+
+// Инициализация
+loadLesson(0);
+updateProgress();
+</script>
+
+</body>
+</html>
